@@ -1,0 +1,17 @@
+Package: aceecostats
+Type: Package
+Title: ACE Ecostats
+Version: 0.1.0
+Authors@R: c(person("Michael D.","Sumner", role = c("aut", "cre"), email = "mdsumner@gmail.com"))
+Description: Stuff for ACE Ecostats.
+License: file LICENSE
+Encoding: UTF-8
+LazyData: true
+Suggests:
+    knitr,
+    rgeos,
+    raster,
+    sp,
+    rmarkdown
+VignetteBuilder: knitr
+RoxygenNote: 5.0.1

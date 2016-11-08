@@ -1,0 +1,34 @@
+---
+title: "Habitat Assessment - Region areas"
+author: "Vignette Author"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{static area}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(aceecostats)
+library(sp)
+data(aes_region)
+
+```
+
+```{r}
+knitr::kable(as.data.frame(aes_region))
+```
+
+## Area
+
+There are `r nrow(aes_region)` regions classified by three different classifications, **BathyClass**, **SectorName**,  and **Zone**.
+
+```{r}
+plot(aes_region, col = aes_region$colour)
+text(coordinates(aes_region), lab = aes_region$ID)
+```
