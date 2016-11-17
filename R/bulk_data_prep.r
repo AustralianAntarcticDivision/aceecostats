@@ -1,4 +1,5 @@
-
+#' @importFrom raster readIniFile
+#' @importFrom tibble as_tibble
 read_ini <- function(inifile) {
   lapply(raster:::readIniFile(inifile, aslist = TRUE), as_tibble)
 }
@@ -31,6 +32,7 @@ raad_file_ini <- function(files, template, prefix = "lyr") {
   ini$data$bandorder <- "BSQ"
   ini
 }
+#' @importFrom raster writeRaster
 dummy_ini_path <- function(grid) {
   temp <- sprintf("%s.grd", tempfile())
   writeRaster(grid, temp, overwrite = TRUE, datatype = "FLT4S", bandorder = "BSQ")

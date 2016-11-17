@@ -2,3 +2,6 @@
 
 export(aes_zone_cols)
 export(build_bulk_file)
+importFrom(raster,readIniFile)
+importFrom(raster,writeRaster)
+importFrom(tibble,as_tibble)
