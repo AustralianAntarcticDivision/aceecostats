@@ -47,7 +47,7 @@ files <- currentsfiles()
 #v <- build_bulk_file(files, "v.grd", read_i_v, layer_prefix = "v")
 mag <- build_bulk_file(files, "bsq/mag_south.grd", read_i_mag, layer_prefix = "mag")
 
-bsq <- brick(tf)
+
 ## convert to BIL if needed
 #system.time({bil <- writeRaster(bsq, filename = "bil.grd", bandorder = "BIL", datatype = "FLT4S")})
 
