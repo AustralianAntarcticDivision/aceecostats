@@ -1,6 +1,9 @@
 aes_region <- readRDS("data-raw/HabitatAssessment_regions.rds")
 aes_region_ll <- readRDS("data-raw/HabitatAssessment_regionsLL.rds")
 
+aes_region <- rmapshaper::ms_simplify(aes_region)
+aes_region_ll <- rmapshaper::ms_simplify(aes_region_ll)
+
 ## change colour transparency
 trans <- c(BanksPlateaus = "FF", Continent = "88", Deep = "44")
 hab.cols <- aes_zone_cols()

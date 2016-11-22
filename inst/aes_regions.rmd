@@ -1,0 +1,50 @@
+---
+title: "Aes regions"
+author: "Ace eco stats task force"
+date: "22 November 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Aes regions
+
+```{r}
+library(aceecostats)
+library(sp)
+```
+We chose
+
+* bathymetric intervals
+* 4 sectors - Atlantic, Indian, East Pacific, West Pacific
+* 3 oceanscapes - Antarctic continental shelf, Deep, Banks/Plateaus
+
+The data is stored on the map object itself. 
+
+```{r}
+library(DT)
+datatable(as.data.frame(aes_region), list(pageLength = nrow(aes_region)), rownames = FALSE)
+```
+
+In polar form the maps appear like this. 
+
+```{r}
+plot(aes_region, col = aes_region$colour)
+
+```
+In unprojected form they must include the split at the -180/180 longitude. 
+
+```{r}
+plot(aes_region_ll, col = aes_region_ll$colour)
+
+```
+
+For output to GIS-ready forms of the data use
+
+```{r,eval=FALSE}
+library(raster)
+shapefile(aes_region, "inst/shp/aes_region.shp")
+shapefile(aes_region_ll, "inst/shp/aes_region_ll.shp")
+```
