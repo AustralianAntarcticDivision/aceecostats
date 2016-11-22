@@ -16,6 +16,6 @@ text Spring, Summer, Autumn, or Winter
 Season classifying
 }
 \examples{
-aes_season("Autumn")
+aes_season(Sys.Date())
 }
 

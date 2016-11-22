@@ -7,7 +7,7 @@
 #'
 #'
 #' @examples
-#' aes_season("Autumn")
+#' aes_season(Sys.Date())
 aes_season <-
   function(x) {
     x <- (as.POSIXlt(x)$mon) + 1L
