@@ -1,4 +1,8 @@
 
+[![Travis-CI Build Status](https://travis-ci.org/AustralianAntarcticDivision/aceecostats.svg?branch=master)](https://travis-ci.org/AustralianAntarcticDivision/aceecostats)
+
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/AustralianAntarcticDivision/aceecostats?branch=master&svg=true)](https://ci.appveyor.com/project/AustralianAntarcticDivision/aceecostats)
+
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 Install
 -------
