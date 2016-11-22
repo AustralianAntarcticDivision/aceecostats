@@ -1,0 +1,75 @@
+---
+title: "Habitat Assessment - bathymetry"
+author: "Vignette Author"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{static area}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(aceecostats)
+library(sp)
+data(aes_region_ll)
+
+```
+
+Previously we classified all pixels based on their region polygon. 
+
+```{r,eval=FALSE}
+library(raadtools)
+topo <- readtopo("etopo2")
+library(tabularaster)
+cn <- cellnumbers(topo, aes_region_ll)
+saveRDS(cn, file = "cache/cn_ETOPO2_cellnumbers_aes_region_ll.rds")
+#xy <- xyFromCell(topo, cn$cell_)
+```
+
+```{r}
+knitr::kable(as.data.frame(aes_region))
+```
+
+## Bathymetry
+
+```{r,eval=FALSE}
+library(raadtools)
+topo <- readAll(readtopo("etopo2"))
+library(dplyr)
+cn <- readRDS("cn_ETOPO2_cellnumbers_aes_region_ll.rds")
+cn <- cn %>% mutate(topoval = extract(topo, cn$cell_))
+cn <- cn %>% mutate(area = extract(area(topo), cell_))
+saveRDS(cn, file = "cache/cn_ETOPO2_cellnumbers_area_topo_aes_region_ll.rds")
+```
+
+```{r}
+library(dplyr)
+cn <- readRDS("../cache/cn_ETOPO2_cellnumbers_area_topo_aes_region_ll.rds")
+depths <- cn %>% group_by(object_) %>% summarize(topo = mean(topoval)) %>% arrange(as.integer(object_))
+
+aes_region$depths <- depths$topo
+
+library(ggpolypath)
+
+ggplot(fortify(aes_region, region = "Name") %>% inner_join(aes_region@data, c("id" = "Name"))) + aes(x = long, y = lat, group = group, fill = depths) + geom_polypath()
+```
+
+
+## Day lengths
+
+```{r}
+
+library(raadtools)
+light <- readderivaadc("light_budget")
+#     units: W.day/m^2"
+#[1] "            long_name: annual solar radiation incident on the water surface, adjusted for sea ice cover"
+
+aes_region$light_budget <- extract(light, aes_region_ll, fun = sum, na.rm = TRUE)
+
+ggplot(fortify(aes_region, region = "Name") %>% inner_join(aes_region@data, c("id" = "Name"))) + aes(x = long, y = lat, group = group, fill = light_budget) + geom_polypath()
+```
