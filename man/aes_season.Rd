@@ -7,9 +7,15 @@
 aes_season(x)
 }
 \arguments{
-\item{x}{}
+\item{x}{date}
+}
+\value{
+text Spring, Summer, Autumn, or Winter
 }
 \description{
 Season classifying
+}
+\examples{
+aes_season("Autumn")
 }
 

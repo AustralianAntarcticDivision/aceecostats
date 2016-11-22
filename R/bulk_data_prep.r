@@ -1,7 +1,7 @@
 #' @importFrom raster readIniFile
 #' @importFrom tibble as_tibble
 read_ini <- function(inifile) {
-  lapply(raster:::readIniFile(inifile, aslist = TRUE), as_tibble)
+  lapply(raster::readIniFile(inifile, aslist = TRUE), as_tibble)
 }
 
 write_ini <- function(x, inifile) {
@@ -55,7 +55,7 @@ dummy_ini_path <- function(grid) {
 #'
 #' @return RasterBrick
 #' @export
-#'
+#' @importFrom raster brick setZ values
 build_bulk_file <- function(files, filename, read_i_raster = NULL, layer_prefix = "lyr") {
   if (is.null(read_i_raster)) read_i_raster <- raster::raster
   ti <- gsub("d$", "i", filename)

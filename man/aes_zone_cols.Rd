@@ -12,4 +12,7 @@ tibble with name and col-our
 \description{
 Habitat region colours
 }
+\examples{
+aes_zone_cols()
+}
 

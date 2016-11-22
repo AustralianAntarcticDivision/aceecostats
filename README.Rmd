@@ -2,6 +2,10 @@
 output: github_document
 ---
 
+[![Travis-CI Build Status](https://travis-ci.org/AustralianAntarcticDivision/aceecostats.svg?branch=master)](https://travis-ci.org/AustralianAntarcticDivision/aceecostats)
+
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/AustralianAntarcticDivision/aceecostats?branch=master&svg=true)](https://ci.appveyor.com/project/AustralianAntarcticDivision/aceecostats)
+
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 ```{r, echo = FALSE}
@@ -12,17 +16,64 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Assessment regions
-
-Download from
-
-
-
-
-## Developers.
+## Install
 
 Install the package
 
 ```{r,eval=FALSE}
 devtools::install_github("AustralianAntarcticDivision/aceecostats")
+```
+
+## Regions
+
+Get the regions. 
+
+```{r}
+library(aceecostats)
+library(sp)
+plot(aes_region, col = aes_region$colour)
+```
+
+In unprojected form. 
+
+```{r}
+library(aceecostats)
+library(sp)
+plot(aes_region_ll, col = aes_region_ll$colour)
+```
+
+
+
+Write to shapefile. 
+
+```{r,eval=FALSE}
+library(raster)
+shapefile(aes_region, "my_aes_region.shp")
+```
+
+(Leave your money on the fridge). 
+
+
+## Metadata 
+
+The data is stored on the map object itself. 
+
+```{r}
+knitr::kable(as.data.frame(aes_region))
+```
+
+
+## Prefer ggplot2?
+
+
+```{r}
+
+## TODO fix this code
+library(ggplot2)
+library(ggpolypath)
+tab <- fortify(aes_region)
+zcols <- as.data.frame(aes_region)[, c("colour", "Name", "ID")]
+tab$Name <- zcols$Name[factor(tab$id)]
+ggplot(tab) + aes(x = long, y = lat, group = group, fill = Name) + scale_fill_manual(values = setNames(zcols$colour, zcols$Name)) + 
+  geom_polypath() + theme(legend.text=element_text(size=6)) + guides(position = "bottom")
 ```

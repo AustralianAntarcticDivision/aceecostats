@@ -1,11 +1,13 @@
 #' Season classifying
 #'
-#' @param x 
+#' @param x date
 #'
-#' @return
+#' @return text Spring, Summer, Autumn, or Winter
 #' @export
 #'
+#'
 #' @examples
+#' aes_season("Autumn")
 aes_season <-
   function(x) {
     x <- (as.POSIXlt(x)$mon) + 1L
