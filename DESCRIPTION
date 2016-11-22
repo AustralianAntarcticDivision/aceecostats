@@ -5,7 +5,8 @@ Version: 0.1.0
 Authors@R: c( 
             person("Michael D.","Sumner", role = c("aut", "cre"), email = "michael.sumner@aad.gov.au"), 
             as.person("Jessica Melbourne-Thomas <Jess.Melbourne-Thomas@aad.gov.au> [aut]"),
-            as.person("Rowan Trebilco <Rowan.Trebilco@utas.edu.au> [aut]")
+            as.person("Rowan Trebilco <Rowan.Trebilco@utas.edu.au> [aut]"), 
+            as.person("Andrew Constable <Andrew.Constable@aad.gov.au> [aut]")
             )
 Description: Utilities for ecosystem status and trends assessment.
 License: file LICENSE
