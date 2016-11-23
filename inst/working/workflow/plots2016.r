@@ -94,19 +94,25 @@ aes_region$Shelf <- ifelse(aes_region$BathyClass == "Continent", "Shelf", "Ocean
 ## update for each variable 
 
 do_sst <- do_ice <- do_mag <- FALSE
-do_ice <- TRUE
+do_mag<- TRUE
+lcols <- c("gray70","gray40", "black")
 
 if (do_mag) {
   outpdf <- "mag.pdf"
   ras <- raster("/mnt/acebulk/mag.grd")
   cell_tab <- read_feather("summaries/mag_tab.feather") %>% 
-    rename(min = min_mag, max = max_max, mean = mean_mag)
+    rename(min = min_mag, max = max_mag, mean = mean_mag)
   varlabel <- function(ttext) {
     bquote(.(ttext)~ "EKE m/s") 
   }
-  min_max <- c(-2)
+  min_max <- c(-2, 3.5)
+  
+  decselect <- function(n) {
+    stopifnot(length(n) == 1L)
+    c("1991-2004","2002-2016")[n]
+  }
+  lcols <- c("gray40", "black")
 }
-
 if (do_ice) {
   outpdf <- "ice.pdf"
   ras <- raster("/mnt/acebulk/ice.grd")
@@ -156,7 +162,7 @@ raw_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_region@data[, c("ind
 dummyplot <- function() plot(1, 1, type = "p", axes = FALSE, xlab = "", ylab = "")
 
 lwdths <- c(6,4,2)
-lcols <- c("gray70","gray40", "black")
+
 den.range <- c(0, 2)
 dplot <- TRUE
 if (dplot) pdf(outpdf)
@@ -164,7 +170,7 @@ if (dplot) pdf(outpdf)
 for (seas in c("Spring", "Summer", "Autumn", "Winter")) {
   for (zone in c("Polar",  "Temperate")) {
     #for (seas in "Spring") {
-    #  for (zone in "Temperate") {
+    #  for (zone in "Polar") {
     layout(layout_m())
     op <- par(mar=c(0,0,0,0), oma=c(2.5, 0.5, 0.5, 0.5), tcl=0.2, cex=1.25, mgp=c(3, 0.25, 0), cex.axis=0.75, col="gray40", col.axis="gray40", fg="gray40")
     
@@ -174,6 +180,7 @@ for (seas in c("Spring", "Summer", "Autumn", "Winter")) {
       if (nrow(asub) < 10) {
         dummyplot()
         dummyplot()
+        next;
       }
       with(asub, {
         plot(min_max, den.range, type = "n", axes = FALSE, xlab = "", ylab = "")
@@ -208,6 +215,7 @@ for (seas in c("Spring", "Summer", "Autumn", "Winter")) {
       if (nrow(asub) < 10) {
         dummyplot()
         dummyplot()
+        next; 
       } 
       with(asub, {
         plot(range(date), range(min), type = "n", axes = FALSE, xlab = "", ylab = "")
