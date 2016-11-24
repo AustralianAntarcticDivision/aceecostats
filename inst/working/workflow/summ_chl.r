@@ -31,5 +31,5 @@ for (i in seq_along(listtab)) {
 
 chl_tab <- bind_rows(listtab)
 library(feather)
-write_feather(chl_tab, "chl_tab.feather")
-writeRaster(raster(chl), "chl_raster.grd")
+write_feather(chl_tab, file.path(outf, "chl_tab.feather"))
+writeRaster(raster(chl), file.path(outf, "chl_raster.grd"))
