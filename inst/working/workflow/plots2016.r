@@ -1,4 +1,8 @@
 
+## worker plot functions
+
+dummyplot <- function() plot(1, 1, type = "p", axes = FALSE, xlab = "", ylab = "")
+
 layout_m <- function() {
   tx <- textConnection(
     "1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
@@ -70,7 +74,8 @@ sector_name <- function(secname) {
 }
 decselect <- function(n) {
   stopifnot(length(n) == 1L)
-  c("1980-1992", "1991-2004","2002-2016")[n]
+  #c("1980-1992", "1991-2004","2002-2016")[n]
+  c("1981-1990", "1990-1999","1999-2008", "2008-2016")[n]
 }
 do_density <- function(v) {
   the.his <- hist(v, breaks=50, plot = FALSE)
@@ -83,9 +88,12 @@ do_density <- function(v) {
   the.den.df
 }
 decade_maker <- function(x) {
-  cut(as.integer(format(x, "%Y")), c(1980, 1992, 2004, 2016), lab = c("1980-1992", "1991-2004","2002-2016"))
+  #cut(as.integer(format(x, "%Y")), c(1980, 1992, 2004, 2016), lab = c("1980-1992", "1991-2004","2002-2016"))
+  cut(as.integer(format(x, "%Y")), c(1981, 1990, 1999, 2008, 2016), lab = c("1981-1990", "1990-1999","1999-2008", "2008-2016"))
 }
 
+
+## preparation
 library(aceecostats)
 library(raster)
 library(feather)
@@ -93,16 +101,27 @@ library(dplyr)
 aes_region$index <- seq(nrow(aes_region))
 aes_region$Shelf <- ifelse(aes_region$BathyClass == "Continent", "Shelf", "Ocean")
 
-## update for each variable 
+## local path to required cache files
+datapath <- "/home/shared/data/assessment/acebulk/summaries"
 
-do_sst <- do_ice <- do_mag <- FALSE
-do_sst <- TRUE
+
+## update for each variable 
+## all must be FALSE, 
+do_chl <- do_sst <- do_ice <- do_mag <- FALSE
+
+## then set one to TRUE
+do_mag <- TRUE
+
+## put a tidy end to the series
 maxdate <- ISOdatetime(2016, 9, 1, 0, 0, 0, tz = "GMT")
+## date range for the sparkline
 sparkline_range <- ISOdatetime(c(1980, 2016), c(1, 11), 1, 0, 0, 0, tz = "GMT")
+
+## variable specific clauses
 if (do_mag) {
- outpdf <- "mag_assess_02.pdf"
-  ras <- raster("/mnt/acebulk/mag.grd")
-  cell_tab <- read_feather("summaries/mag_tab.feather") %>% 
+ outpdf <- "mag_assess_03.pdf"
+  ras <- raster(file.path(datapath, "mag_raster.grd"))
+  cell_tab <- read_feather(file.path(datapath, "mag_tab.feather")) %>% 
     filter(min_mag > 0) %>% 
     rename(min = min_mag, max = max_mag, mean = mean_mag) %>% 
     mutate(min = log(min), max = log(max), mean = log(mean)) 
@@ -119,9 +138,9 @@ if (do_mag) {
  # lcols <- c("gray40", "black")
 }
 if (do_ice) {
-  outpdf <- "ice_assess_02.pdf"
-  ras <- raster("/mnt/acebulk/ice.grd")
-  cell_tab <- read_feather("summaries/ice_tab.feather") %>% 
+  outpdf <- "ice_assess_03.pdf"
+  ras <- raster(file.path(datapath,"ice_raster.grd"))
+  cell_tab <- read_feather(file.path(datapath,"ice_tab.feather")) %>% 
     rename(min = min_ice, max = max_ice, mean = mean_ice)
   varlabel <- function(ttext) {
     bquote(.(ttext)~ "ICE %") 
@@ -130,9 +149,9 @@ if (do_ice) {
 }
 
 if (do_sst) {
-  outpdf <- "sst_assess_02.pdf"
-  ras <- raster("/mnt/acebulk/sst.grd")
-  cell_tab <- read_feather("summaries/sst_tab.feather") %>% 
+  outpdf <- "sst_assess_03.pdf"
+  ras <- raster(file.path(datapath, "sst_raster.grd"))
+  cell_tab <- read_feather(file.path(datapath, "/sst_tab.feather")) %>% 
     rename(min = min_sst, max = max_sst, mean = mean_sst)
   varlabel <- function(ttext) {
     bquote(.(ttext)~ "SST" ~ (degree*C)) 
@@ -141,9 +160,21 @@ if (do_sst) {
 }
 
 
+if (do_chl) {
+  outpdf <- "chl_assess_03.pdf"
+  ras <- raster(file.path(datapath,"chl_raster.grd"))
+  cell_tab <- read_feather(file.path(datapath,"chl_tab.feather")) %>% 
+    rename(min = min_chl, max = max_chl, mean = mean_chl) %>% 
+    mutate(min = log(min), max = log(max), mean = log(mean))
+  
+  varlabel <- function(ttext) {
+    bquote(.(ttext)~ "CHL-a mg m-3") 
+  }
+  min_max <- log(c(5e-2, 10))
+}
 
 
-
+## now process the summaries down
 cell_tab <- cell_tab %>% 
   mutate(decade = decade_maker(date)) %>% 
   filter(date <  maxdate) %>% 
@@ -165,10 +196,10 @@ raw_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_region@data[, c("ind
   mutate(Season = aes_season(date))
 
 
-dummyplot <- function() plot(1, 1, type = "p", axes = FALSE, xlab = "", ylab = "")
 
-lwdths <- c(6,4,2)
-lcols <- c("gray70","gray40", "black")
+## plot specifics
+lwdths <- c(6,4,2,1)
+lcols <- grey(seq(1, 0, length = nlevels(raw_tab$decade) + 2))[-c(1, 2)]
 den.range <- c(0, 2)
 dplot <- TRUE
 if (dplot) pdf(outpdf)
@@ -179,7 +210,7 @@ for (seas in c("Spring", "Summer", "Autumn", "Winter")) {
 #  for (zone in "Polar") {
     layout(layout_m())
     op <- par(mar=c(0,0,0,0), oma=c(2.5, 0.95, 0.5, 0.5), tcl=0.2, cex=1.25, mgp=c(3, 0.25, 0), cex.axis=0.75, col="gray40", col.axis="gray40", fg="gray40")
-    
+    ## DENSITY PLOTS
     for (sector in c("Atlantic",  "Indian", "EastPacific", "WestPacific")) {
       titletext<- paste(seas, zone)
       asub <- subset(raw_tab, SectorName == sector & Zone == zone & Season == seas)
@@ -199,6 +230,7 @@ for (seas in c("Spring", "Summer", "Autumn", "Winter")) {
         
           dens.df <- do_density(vals)
           lines(dens.df, col=lcols[k], lwd=lwdths[k])
+          print(k)
         }
         rect(par("usr")[1],par("usr")[3],par("usr")[2],par("usr")[4],
              col = paste0(sector_colour(sector),40))
@@ -224,7 +256,7 @@ for (seas in c("Spring", "Summer", "Autumn", "Winter")) {
       
     }
     
-
+    ## SPARKLINES
     for (sector in c("Atlantic",  "Indian", "EastPacific", "WestPacific")) {
       asub <- subset(summ_tab, SectorName == sector & Zone == zone & Season == seas)
       if (nrow(asub) < 10) {
@@ -232,19 +264,18 @@ for (seas in c("Spring", "Summer", "Autumn", "Winter")) {
         dummyplot()
         next; 
       } 
+      
       with(asub, {
-        #plot(range(date), range(min), type = "n", axes = FALSE, xlab = "", ylab = "")
         plot(sparkline_range, range(min), type = "n", axes = FALSE, xlab = "", ylab = "")
         segmentlines(cbind(date, min), col = lcols[decade])
         abline(h = mean(min))
         textheadtail(date, min)
-       # box()
-        #plot(range(date), range(max), type = "n", axes = FALSE, xlab = "", ylab = "")
+ 
         plot(sparkline_range, range(max), type = "n", axes = FALSE, xlab = "", ylab = "")
         segmentlines(cbind(date, max), col = lcols[decade])
         abline(h = mean(max))
         textheadtail(date, max)
-       # box()
+
         
       }
       )
@@ -256,4 +287,4 @@ for (seas in c("Spring", "Summer", "Autumn", "Winter")) {
 
 if (dplot) dev.off()
 
-1
+
