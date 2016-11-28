@@ -64,9 +64,9 @@ for (ivar in seq_along(vars)) {
   raw_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_region@data[, c("index", "SectorName", "Zone", "Shelf")])) %>% 
     mutate(Season = aes_season(date))
   
-  write_feather(obj_tab, sprintf("summaries/%s_cell_tab.feather", vars[ivar]))
-  writeRaster(ras, sprintf("summaries/%s_raster.grd", vars[ivar]))
-  write_feather(summ_tab, sprintf("summaries/%s_summ_tab.feather", vars[ivar]))
-  write_feather(raw_tab, sprintf("summaries/%s_raw_tab.feather", vars[ivar]))
+  write_feather(cell_tab,  file.path(outf, sprintf("%s_cell_tab.feather", vars[ivar])))
+  writeRaster(ras,        file.path(outf, sprintf("%s_raster.grd", vars[ivar])))
+  write_feather(summ_tab, file.path(outf, sprintf("%s_summ_tab.feather", vars[ivar])))
+  write_feather(raw_tab,  file.path(outf, sprintf("%s_raw_tab.feather", vars[ivar])))
 }
 

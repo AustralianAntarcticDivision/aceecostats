@@ -90,15 +90,13 @@ do_density <- function(v) {
 
 
 ## preparation
-library(aceecostats)
-library(raster)
+#library(aceecostats)
+#library(raster)
 library(feather)
 library(dplyr)
-aes_region$index <- seq(nrow(aes_region))
-aes_region$Shelf <- ifelse(aes_region$BathyClass == "Continent", "Shelf", "Ocean")
 
 ## local path to required cache files
-datapath <- "/home/shared/data/assessment/acebulk/summaries"
+datapath <- "/mnt/acebulk"
 
 
 ## update for each variable 
@@ -106,7 +104,7 @@ datapath <- "/home/shared/data/assessment/acebulk/summaries"
 do_chl <- do_sst <- do_ice <- do_mag <- FALSE
 
 ## then set one to TRUE
-do_sst <- TRUE
+do_chl <- TRUE
 
 
 ## date range for the sparkline
@@ -133,7 +131,7 @@ if (do_mag) {
  # lcols <- c("gray40", "black")
 }
 if (do_ice) {
-  outpdf <- "ice_assess_03.pdf"
+  outpdf <- "ice_assess_04.pdf"
   ras <- raster(file.path(datapath,"ice_raster.grd"))
   cell_tab <- read_feather(file.path(datapath,"ice_tab.feather")) 
   ##%>%   rename(min = min_ice, max = max_ice, mean = mean_ice)
@@ -144,10 +142,11 @@ if (do_ice) {
 }
 
 if (do_sst) {
-  outpdf <- "sst_assess_03.pdf"
+  outpdf <- "sst_assess_04.pdf"
   ras <- raster(file.path(datapath, "sst_raster.grd"))
-  cell_tab <- read_feather(file.path(datapath, "/sst_tab.feather")) %>% 
-    rename(min = min_sst, max = max_sst, mean = mean_sst)
+  cell_tab <- read_feather(file.path(datapath, "sst_cell_tab.feather")) 
+  summ_tab <- read_feather(file.path(datapath, "sst_summ_tab.feather")) 
+  raw_tab <-  read_feather(file.path(datapath, "sst_raw_tab.feather")) 
   varlabel <- function(ttext) {
     bquote(.(ttext)~ "SST" ~ (degree*C)) 
   }
@@ -156,10 +155,13 @@ if (do_sst) {
 
 
 if (do_chl) {
-  outpdf <- "chl_assess_03.pdf"
+  outpdf <- "chl_assess_04.pdf"
   ras <- raster(file.path(datapath,"chl_raster.grd"))
-  cell_tab <- read_feather(file.path(datapath,"chl_tab.feather")) %>% 
-    rename(min = min_chl, max = max_chl, mean = mean_chl) %>% 
+  cell_tab <- read_feather(file.path(datapath, "chl_cell_tab.feather"))  %>% 
+    mutate(min = log(min), max = log(max), mean = log(mean))
+  summ_tab <- read_feather(file.path(datapath, "chl_summ_tab.feather")) %>% 
+    mutate(min = log(min), max = log(max), mean = log(mean))
+  raw_tab <-  read_feather(file.path(datapath, "chl_raw_tab.feather")) %>% 
     mutate(min = log(min), max = log(max), mean = log(mean))
   
   varlabel <- function(ttext) {
@@ -169,34 +171,13 @@ if (do_chl) {
 }
 
 
-## now process the summaries down
-cell_tab <- cell_tab %>% 
-  mutate(decade = decade_maker(date)) %>% 
-  filter(date <  maxdate) %>% 
-  filter(!is.na(decade))
-
-ucell <- distinct(cell_tab, cell_)
-ucell$index <- over(spTransform(xyFromCell(ras, ucell$cell_, spatial=TRUE), projection(aes_region)), 
-                    aes_region)$index
-
-## summ_tab is the mean values over time
-summ_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_region@data[, c("index", "SectorName", "Zone", "Shelf")])) %>% 
-  mutate(Season = aes_season(date)) %>% 
-  group_by(Season, Zone, decade, SectorName,  date) %>%
-  summarize(min = mean(min), max = mean(max)) %>% 
-  ungroup()
-
-## raw_tab is all the cell values for density plots
-raw_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_region@data[, c("index", "SectorName", "Zone", "Shelf")])) %>% 
-  mutate(Season = aes_season(date))
-
 
 
 ## plot specifics
 lwdths <- c(6,4,2,1)
 lcols <- grey(seq(1, 0, length = nlevels(raw_tab$decade) + 2))[-c(1, 2)]
 den.range <- c(0, 2)
-dplot <- TRUE
+dplot <- FALSE
 if (dplot) pdf(outpdf)
 
 for (seas in c("Spring", "Summer", "Autumn", "Winter")) {
