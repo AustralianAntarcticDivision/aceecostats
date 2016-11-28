@@ -87,10 +87,6 @@ do_density <- function(v) {
   the.den.df$y[the.den.df$y > 1] <- 1
   the.den.df
 }
-decade_maker <- function(x) {
-  #cut(as.integer(format(x, "%Y")), c(1980, 1992, 2004, 2016), lab = c("1980-1992", "1991-2004","2002-2016"))
-  cut(as.integer(format(x, "%Y")), c(1981, 1990, 1999, 2008, 2016), lab = c("1981-1990", "1990-1999","1999-2008", "2008-2016"))
-}
 
 
 ## preparation
@@ -110,10 +106,9 @@ datapath <- "/home/shared/data/assessment/acebulk/summaries"
 do_chl <- do_sst <- do_ice <- do_mag <- FALSE
 
 ## then set one to TRUE
-do_mag <- TRUE
+do_sst <- TRUE
 
-## put a tidy end to the series
-maxdate <- ISOdatetime(2016, 9, 1, 0, 0, 0, tz = "GMT")
+
 ## date range for the sparkline
 sparkline_range <- ISOdatetime(c(1980, 2016), c(1, 11), 1, 0, 0, 0, tz = "GMT")
 
@@ -140,8 +135,8 @@ if (do_mag) {
 if (do_ice) {
   outpdf <- "ice_assess_03.pdf"
   ras <- raster(file.path(datapath,"ice_raster.grd"))
-  cell_tab <- read_feather(file.path(datapath,"ice_tab.feather")) %>% 
-    rename(min = min_ice, max = max_ice, mean = mean_ice)
+  cell_tab <- read_feather(file.path(datapath,"ice_tab.feather")) 
+  ##%>%   rename(min = min_ice, max = max_ice, mean = mean_ice)
   varlabel <- function(ttext) {
     bquote(.(ttext)~ "ICE %") 
   }

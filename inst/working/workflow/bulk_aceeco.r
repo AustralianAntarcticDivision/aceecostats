@@ -45,9 +45,9 @@ library(raadtools)
 outf <- "/mnt/acebulk"
 ice <- build_bulk_file(icefiles(), file.path(outf, "ice.grd"), read_i_ice, layer_prefix = "ice")
 sst <- build_bulk_file(sstfiles(), file.path(outf, "sst.grd"), read_i_sst, layer_prefix = "sst")
-mag <- build_bulk_file(currentsfiles(), file.path(outf, "mag.grd"), read_i_mag, layer_prefix = "mag")
+#mag <- build_bulk_file(currentsfiles(), file.path(outf, "mag.grd"), read_i_mag, layer_prefix = "mag")
 
-outf <- "/home/shared/data/assessment/acebulk/summaries"
+
 library(dplyr)
 library(tibble)
 sw <- ocfiles(time.resolution = "monthly", product = "SeaWiFS", varname = "CHL", type = "L3m", ext = "nc")

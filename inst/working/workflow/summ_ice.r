@@ -22,10 +22,10 @@ for (i in seq_along(listtab)) {
   asub <- which(segs == unique(segs)[i])
 
   a_obj <- readAll(subset(obj, asub))
-  tab <- tabit(min(a_obj)) %>% rename(min_ice = val) %>% mutate(date = dates[asub[1]]) %>% 
-    filter(min_ice > 0)
-  tab$max_ice <- values(max(a_obj))[tab$cell_]
-  tab$mean_ice <- values(mean(a_obj))[tab$cell_]
+  tab <- tabit(min(a_obj)) %>% rename(min = val) %>% mutate(date = dates[asub[1]]) %>% 
+    filter(min > 0)
+  tab$max<- values(max(a_obj))[tab$cell_]
+  tab$mean <- values(mean(a_obj))[tab$cell_]
   listtab[[i]] <- tab
   print(i)
 }
