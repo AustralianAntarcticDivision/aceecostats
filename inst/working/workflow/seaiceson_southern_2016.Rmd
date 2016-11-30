@@ -24,10 +24,12 @@ sfiles <- icefiles(hemisphere = "south")
 sfiles %>% summarize(count = n(), datemin = min(date), datemax = max(date))
 ```
 
-If our repository has a matching number and date range of files, we can continue in confidence. 
+# ISSUES
+Data are missing from 1987-12-04 to early Jan 1988, Massom et al. use "the climatology" but it seems pertinent to just assume we cannot calculate day of retreat for that season since the mean value can be wildly different from a given year. 
 
+Data are two-daily from 1978 to mid 80s, we just interpolate to fill the days. 
 
-Utilities. 
+# Utilities. 
 
 ```{r}
 ## function to ensure we have clean boundaries (untidy for now)
