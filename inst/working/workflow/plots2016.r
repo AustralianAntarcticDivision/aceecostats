@@ -77,10 +77,10 @@ decselect <- function(n) {
   #c("1980-1992", "1991-2004","2002-2016")[n]
   c("1981-1990", "1990-1999","1999-2008", "2008-2016")[n]
 }
-do_density <- function(v) {
+do_density <- function(v, w = NULL) {
   the.his <- hist(v, breaks=50, plot = FALSE)
   multiplier <- (the.his$counts / the.his$density)[1]
-  the.den <- density(v, from=min(v), to=max(v))
+  the.den <- density(v, from=min(v), to=max(v), weights = w)
   scl <- function(x) (x - min(x))/diff(range(x))
   the.den.df<- data.frame(x=the.den$x, y=scl(the.den$y))
   the.den.df <- the.den.df[the.den.df$x >= min(v) & the.den.df$x <= max(v),]
@@ -90,8 +90,8 @@ do_density <- function(v) {
 
 
 ## preparation
-#library(aceecostats)
-#library(raster)
+library(aceecostats)
+library(raster)
 library(feather)
 library(dplyr)
 
@@ -142,9 +142,9 @@ if (do_ice) {
 }
 
 if (do_sst) {
-  outpdf <- "sst_assess_04.pdf"
+  outpdf <- "sst_assess_05.pdf"
   ras <- raster(file.path(datapath, "sst_raster.grd"))
-  cell_tab <- read_feather(file.path(datapath, "sst_cell_tab.feather")) 
+ ## cell_tab <- read_feather(file.path(datapath, "sst_cell_tab.feather")) 
   summ_tab <- read_feather(file.path(datapath, "sst_summ_tab.feather")) 
   raw_tab <-  read_feather(file.path(datapath, "sst_raw_tab.feather")) 
   varlabel <- function(ttext) {
@@ -155,39 +155,44 @@ if (do_sst) {
 
 
 if (do_chl) {
-  outpdf <- "chl_assess_04.pdf"
+  outpdf <- "chl_assess_05.pdf"
   ras <- raster(file.path(datapath,"chl_raster.grd"))
   cell_tab <- read_feather(file.path(datapath, "chl_cell_tab.feather"))  %>% 
     mutate(min = log(min), max = log(max), mean = log(mean))
   summ_tab <- read_feather(file.path(datapath, "chl_summ_tab.feather")) %>% 
-    mutate(min = log(min), max = log(max), mean = log(mean))
+    mutate(min = log(min), max = log(max))  ## no mean
+  
   raw_tab <-  read_feather(file.path(datapath, "chl_raw_tab.feather")) %>% 
     mutate(min = log(min), max = log(max), mean = log(mean))
   
   varlabel <- function(ttext) {
-    bquote(.(ttext)~ "CHL-a mg m-3") 
+    bquote(.(ttext)~ "ln CHL-a mg m-3") 
   }
   min_max <- log(c(5e-2, 10))
 }
 
 
-
-
+total_areas <- aes_region@data %>% group_by(SectorName, Zone) %>% summarize(area_km2 = sum(area_km2))
+total_areas$area_factor <- 5000000
 ## plot specifics
 lwdths <- c(6,4,2,1)
 lcols <- grey(seq(1, 0, length = nlevels(raw_tab$decade) + 2))[-c(1, 2)]
 den.range <- c(0, 2)
-dplot <- FALSE
+dplot <- TRUE
 if (dplot) pdf(outpdf)
 
 for (seas in c("Spring", "Summer", "Autumn", "Winter")) {
   for (zone in c("Polar",  "Temperate")) {
+  
 #for (seas in "Spring") {
 #  for (zone in "Polar") {
+   
     layout(layout_m())
     op <- par(mar=c(0,0,0,0), oma=c(2.5, 0.95, 0.5, 0.5), tcl=0.2, cex=1.25, mgp=c(3, 0.25, 0), cex.axis=0.75, col="gray40", col.axis="gray40", fg="gray40")
     ## DENSITY PLOTS
     for (sector in c("Atlantic",  "Indian", "EastPacific", "WestPacific")) {
+      this_area <- subset(total_areas, Zone == zone & SectorName == sector)
+      den.range <- c(0, this_area$area_km2/this_area$area_factor)
       titletext<- paste(seas, zone)
       asub <- subset(raw_tab, SectorName == sector & Zone == zone & Season == seas)
       if (nrow(asub) < 10) {
@@ -201,10 +206,10 @@ for (seas in c("Spring", "Summer", "Autumn", "Winter")) {
         text(0, den.range[2]*0.9, lab = sector_name(sector), cex=0.5)
         for (k in seq_along(lcols)) {
           vals <- min[decade == decselect(k)]
-         
+          wgt <- area[decade == decselect(k)] 
           if (length(vals) < 1 | all(is.na(vals))) next;
         
-          dens.df <- do_density(vals)
+          dens.df <- do_density(vals, w = wgt)
           lines(dens.df, col=lcols[k], lwd=lwdths[k])
           print(k)
         }
@@ -219,7 +224,8 @@ for (seas in c("Spring", "Summer", "Autumn", "Winter")) {
           vals <- min[decade == decselect(k)]
           if (length(vals) < 1 | all(is.na(vals))) next;
           if (length(vals) < 1) next;
-          dens.df <- do_density(max[decade == decselect(k)])
+          wgt <- area[decade == decselect(k)]
+          dens.df <- do_density(max[decade == decselect(k)], wgt)
           lines(dens.df, col=lcols[k], lwd=lwdths[k])
         }
         rect(par("usr")[1],par("usr")[3],par("usr")[2],par("usr")[4],

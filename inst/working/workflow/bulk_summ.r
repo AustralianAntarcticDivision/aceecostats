@@ -26,16 +26,20 @@ for (ivar in seq_along(vars)) {
   
   obj <- brick(file.path(outf, sprintf("%s.grd", vars[ivar])))
   ras <- raster(obj)
+
+  gridarea <- area(ras)/1e6
   ## unique integer from 0 to ~nrow(sf)/90 for each three month period
   segs <- cumsum(c(0, abs(diff(unclass(factor(aes_season(getZ(obj))))))))
   
   listtab <- vector("list", length(unique(segs)))
   dates <- as.POSIXct(getZ(obj))
+
   for (i in seq_along(listtab)) {
     asub <- which(segs == unique(segs)[i])
     a_obj <- readAll(subset(obj, asub))
-    tab <- tabit(min(a_obj)) %>% rename(min = val) %>% mutate(date = dates[asub[1]]) %>% 
-      filter(min > 0)
+    tab <- tabit(min(a_obj)) %>% rename(min = val) %>% mutate(date = dates[asub[1]]) 
+    #%>% 
+    #  filter(min > 0)
     tab$max<- values(max(a_obj))[tab$cell_]
     tab$mean <- values(mean(a_obj))[tab$cell_]
     listtab[[i]] <- tab
@@ -49,7 +53,7 @@ for (ivar in seq_along(vars)) {
     filter(date <  maxdate) %>% 
     filter(!is.na(decade))
   
-  ucell <- distinct(cell_tab, cell_)
+  ucell <- distinct(cell_tab, cell_) %>% mutate(area = extract(gridarea, cell_))
   ucell$index <- over(spTransform(xyFromCell(ras, ucell$cell_, spatial=TRUE), projection(aes_region)), 
                       aes_region)$index
   
@@ -65,7 +69,7 @@ for (ivar in seq_along(vars)) {
     mutate(Season = aes_season(date))
   
   write_feather(cell_tab,  file.path(outf, sprintf("%s_cell_tab.feather", vars[ivar])))
-  writeRaster(ras,        file.path(outf, sprintf("%s_raster.grd", vars[ivar])))
+ # writeRaster(ras,        file.path(outf, sprintf("%s_raster.grd", vars[ivar])))
   write_feather(summ_tab, file.path(outf, sprintf("%s_summ_tab.feather", vars[ivar])))
   write_feather(raw_tab,  file.path(outf, sprintf("%s_raw_tab.feather", vars[ivar])))
 }
