@@ -45,8 +45,8 @@ dummy_ini_path <- function(grid) {
 #' Build a file-backed raster from a collection of file names and dates.
 #'
 #'
-#' The files collection must have columns \code{fullname} with the path to the file, and \code{date} with a valid date or date-time.
-#' The function \code{read_i_raster} takes an integer and the files collection and returns the raster read from the i-th row.
+#' The files collection must have columns `fullname` with the path to the file, and `date` with a valid date or date-time.
+#' The function `read_i_raster` takes an integer and the files collection and returns the raster read from the i-th row.
 #' The date is set on the object after this function returns, to ensure it matches the database of files, and also so that the raster function can be used as a fallback.
 #' @param files data frame with `fullname` and `date`
 #' @param filename database of files, see Details

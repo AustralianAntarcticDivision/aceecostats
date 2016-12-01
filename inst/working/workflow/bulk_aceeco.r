@@ -52,7 +52,7 @@ library(raadtools)
 #' @param i the index of the file
 #' @param files the table of file names and dates
 #'
-#' @return \code{\link[raster]{RasterLayer}}
+#' @return [raster::RasterLayer()]
 #' @export
 #' @rdname read-maps
 read_i_ice <- function(i, files) {
