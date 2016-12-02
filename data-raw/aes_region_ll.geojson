@@ -12,7 +12,6 @@
         "Name": "Atlantic_Polar_BanksPlateaus",
         "Shelf": "Ocean",
         "area_km2": 501423.6358,
-        "colour": "#7CAE0099",
         "fill": "#7CAE0099"
       },
       "geometry": {
@@ -3439,7 +3438,6 @@
         "Name": "Atlantic_Polar_Continent",
         "Shelf": "Shelf",
         "area_km2": 1084547.9528,
-        "colour": "#7CAE00FF",
         "fill": "#7CAE00FF"
       },
       "geometry": {
@@ -5852,7 +5850,6 @@
         "Name": "Atlantic_Polar_Deep",
         "Shelf": "Ocean",
         "area_km2": 19353773.3612,
-        "colour": "#7CAE0099",
         "fill": "#7CAE0099"
       },
       "geometry": {
@@ -12485,7 +12482,6 @@
         "Name": "Atlantic_Temperate_BanksPlateaus",
         "Shelf": "Ocean",
         "area_km2": 2108929.3404,
-        "colour": "#7CAE004D",
         "fill": "#7CAE004D"
       },
       "geometry": {
@@ -16217,7 +16213,6 @@
         "Name": "Atlantic_Temperate_Deep",
         "Shelf": "Ocean",
         "area_km2": 13562422.1063,
-        "colour": "#7CAE004D",
         "fill": "#7CAE004D"
       },
       "geometry": {
@@ -20804,7 +20799,6 @@
         "Name": "EastPacific_Polar_Continent",
         "Shelf": "Shelf",
         "area_km2": 724857.5412,
-        "colour": "#C77CFFFF",
         "fill": "#C77CFFFF"
       },
       "geometry": {
@@ -22193,7 +22187,6 @@
         "Name": "EastPacific_Polar_Deep",
         "Shelf": "Ocean",
         "area_km2": 3241353.3593,
-        "colour": "#C77CFF99",
         "fill": "#C77CFF99"
       },
       "geometry": {
@@ -23382,7 +23375,6 @@
         "Name": "EastPacific_Temperate_BanksPlateaus",
         "Shelf": "Ocean",
         "area_km2": 405139.119,
-        "colour": "#C77CFF4D",
         "fill": "#C77CFF4D"
       },
       "geometry": {
@@ -25888,7 +25880,6 @@
         "Name": "EastPacific_Temperate_Deep",
         "Shelf": "Ocean",
         "area_km2": 10168793.897,
-        "colour": "#C77CFF4D",
         "fill": "#C77CFF4D"
       },
       "geometry": {
@@ -27539,7 +27530,6 @@
         "Name": "Indian_Polar_BanksPlateaus",
         "Shelf": "Ocean",
         "area_km2": 676845.5655,
-        "colour": "#00BFC499",
         "fill": "#00BFC499"
       },
       "geometry": {
@@ -28992,7 +28982,6 @@
         "Name": "Indian_Polar_Continent",
         "Shelf": "Shelf",
         "area_km2": 706453.8107,
-        "colour": "#00BFC4FF",
         "fill": "#00BFC4FF"
       },
       "geometry": {
@@ -30545,7 +30534,6 @@
         "Name": "Indian_Polar_Deep",
         "Shelf": "Ocean",
         "area_km2": 11022311.3218,
-        "colour": "#00BFC499",
         "fill": "#00BFC499"
       },
       "geometry": {
@@ -33991,7 +33979,6 @@
         "Name": "Indian_Temperate_BanksPlateaus",
         "Shelf": "Ocean",
         "area_km2": 694668.9282,
-        "colour": "#00BFC44D",
         "fill": "#00BFC44D"
       },
       "geometry": {
@@ -36122,7 +36109,6 @@
         "Name": "Indian_Temperate_Deep",
         "Shelf": "Ocean",
         "area_km2": 12373702.7623,
-        "colour": "#00BFC44D",
         "fill": "#00BFC44D"
       },
       "geometry": {
@@ -38902,7 +38888,6 @@
         "Name": "WestPacific_Polar_BanksPlateaus",
         "Shelf": "Ocean",
         "area_km2": 32840.0515,
-        "colour": "#F8766D99",
         "fill": "#F8766D99"
       },
       "geometry": {
@@ -39657,7 +39642,6 @@
         "Name": "WestPacific_Polar_Continent",
         "Shelf": "Shelf",
         "area_km2": 885409.002,
-        "colour": "#F8766DFF",
         "fill": "#F8766DFF"
       },
       "geometry": {
@@ -41279,7 +41263,6 @@
         "Name": "WestPacific_Polar_Deep",
         "Shelf": "Ocean",
         "area_km2": 8103336.2396,
-        "colour": "#F8766D99",
         "fill": "#F8766D99"
       },
       "geometry": {
@@ -43974,7 +43957,6 @@
         "Name": "WestPacific_Temperate_BanksPlateaus",
         "Shelf": "Ocean",
         "area_km2": 2552842.0756,
-        "colour": "#F8766D4D",
         "fill": "#F8766D4D"
       },
       "geometry": {
@@ -48581,7 +48563,6 @@
         "Name": "WestPacific_Temperate_Deep",
         "Shelf": "Ocean",
         "area_km2": 20472658.2013,
-        "colour": "#F8766D4D",
         "fill": "#F8766D4D"
       },
       "geometry": {
