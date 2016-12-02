@@ -1,4 +1,5 @@
 ---
+title: readme
 output: github_document
 ---
 
@@ -10,9 +11,7 @@ output: github_document
 
 ```{r, echo = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "README-"
+knitr::opts_chunk$set(echo = TRUE)
 )
 ```
 
@@ -31,15 +30,47 @@ Get the regions.
 ```{r}
 library(aceecostats)
 library(sp)
-plot(aes_region, col = aes_region$colour)
+labs <- data.frame(x= c(112406,4488211,-1734264,-4785284), y=c(4271428,-224812,-3958297,-104377), labels=c("Atlantic","Indian", "West Pacific", "East Pacific"))
+labs <- SpatialPointsDataFrame(labs[,1:2],labs, proj4string = CRS(proj4string(aes_region)))
+plot(aes_region, col = aes_region$colour, border="grey")
+text(labs$x, labs$y, labs$labels, cex=0.6)
+
+# latitude zone labels
+lat.labs<- function(the.proj="polar"){
+  if(the.proj=="latlon"){
+    ext <- extent(aes_region_ll)
+    text("Polar", x=ext@xmin, y=ext@ymin, xpd=NA, pos=2, cex=0.6)
+    text("High latitude", x=ext@xmin, y=ext@ymin*0.8, xpd=NA, pos=2, cex=0.6)
+    text("Mid latitude", x=ext@xmin, y=ext@ymin*0.6, xpd=NA, pos=2, cex=0.6)
+  }
+  if(the.proj=="polar"){
+    text(c("Polar", "High latitude", "Mid latitude"), x=c(113064.6,-1017581.1,-3642294), y=c(-1518296,-2285519,-3012363), cex=0.5, col=rgb(0,0,0,0.7))
+  }
+}
+lat.labs()
+
 ```
 
 In unprojected form. 
 
 ```{r}
 library(aceecostats)
+library(raster)
 library(sp)
-plot(aes_region_ll, col = aes_region_ll$colour)
+plot(aes_region_ll, col = aes_region_ll$colour, border="grey")
+ll_labs <- spTransform(labs, CRS(proj4string(aes_region_ll)))
+text(ll_labs$x, ll_labs$y, labels=labs$labels, cex=0.6)
+lat.labs("latlon")
+
+```
+
+## Simplified regions
+
+```{r}
+
+plot(aes_region_simple, col = aes_region_simple$colour, border="grey")
+text(labs$x, labs$y, labels=labs$labels, cex=0.6)
+lat.labs()
 ```
 
 
@@ -47,7 +78,6 @@ plot(aes_region_ll, col = aes_region_ll$colour)
 Write to shapefile. 
 
 ```{r,eval=FALSE}
-library(raster)
 shapefile(aes_region, "my_aes_region.shp")
 ```
 
@@ -75,5 +105,8 @@ tab <- fortify(aes_region)
 zcols <- as.data.frame(aes_region)[, c("colour", "Name", "ID")]
 tab$Name <- zcols$Name[factor(tab$id)]
 ggplot(tab) + aes(x = long, y = lat, group = group, fill = Name) + scale_fill_manual(values = setNames(zcols$colour, zcols$Name)) + 
-  geom_polypath() + theme(legend.text=element_text(size=6)) + guides(position = "bottom")
+geom_polypath() + theme(legend.text=element_text(size=6)) + guides(position = "bottom")
+
 ```
+
+
