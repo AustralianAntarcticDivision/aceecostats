@@ -6,6 +6,10 @@ NULL
 
 #' Assessment regions for Southern Ocean ecosystems
 #' 
+#' The full set is `aes_region`, which has a complementary data set in longitude/latitude
+#' called `aes_region_ll`. There is also simpler version of `aes_region` with the banks and plateaus
+#' included in the larger pieces `aes_region_simple`. 
+#' 
 #' These assessment regions are designed for assessing status and trends in 
 #' habitats, biogeochemistry, productivity, key species and ecosystem 
 #' attributes.  The assessments would be targeting policy makers to describe 
@@ -85,6 +89,6 @@ NULL
 #'   Jolla, California, USA.
 #'   
 #' @name aes_region
-#' @aliases aes_region_ll
+#' @aliases aes_region_ll aes_region_simple
 NULL
 

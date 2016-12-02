@@ -1,7 +1,22 @@
 
-tabit <- function(x) {
-  tibble(val = values(x), cell_ = seq(ncell(x))) %>% filter(!is.na(val))
+#' Convert a raster to a data frame. 
+#' 
+#' Create a data frame from a single layer [raster::RasterLayer()]. 
+#'
+#' @param x 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+tabit <- function(x, na.rm = TRUE) {
+  x <- tibble(val = values(x), cell_ = seq(ncell(x)))
+  if (na.rm = TRUE) {
+    x <- filter(!is.na(val))
+  }
+  x
 }
+
 
 decade_maker <- function(x) {
   #cut(as.integer(format(x, "%Y")), c(1980, 1992, 2004, 2016), lab = c("1980-1992", "1991-2004","2002-2016"))
@@ -36,12 +51,13 @@ for (ivar in seq_along(vars)) {
 
   for (i in seq_along(listtab)) {
     asub <- which(segs == unique(segs)[i])
-    a_obj <- readAll(subset(obj, asub))
+    a_obj <- setZ(readAll(subset(obj, asub)), dates[asub])
     tab <- tabit(min(a_obj)) %>% rename(min = val) %>% mutate(date = dates[asub[1]]) 
     #%>% 
     #  filter(min > 0)
     tab$max<- values(max(a_obj))[tab$cell_]
     tab$mean <- values(mean(a_obj))[tab$cell_]
+    tab$count <- values(calc(a_obj > 0, sum))[tab$cell_]
     listtab[[i]] <- tab
     print(i)
   }
@@ -61,16 +77,16 @@ for (ivar in seq_along(vars)) {
   summ_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_region@data[, c("index", "SectorName", "Zone", "Shelf")])) %>% 
     mutate(Season = aes_season(date)) %>% 
     group_by(Season, Zone, decade, SectorName,  date) %>%
-    summarize(min = mean(min), max = mean(max)) %>% 
+    summarize(min = mean(min), max = mean(max), count = mean(count)) %>% 
     ungroup()
   
   ## raw_tab is all the cell values for density plots
   raw_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_region@data[, c("index", "SectorName", "Zone", "Shelf")])) %>% 
     mutate(Season = aes_season(date))
   
-  write_feather(cell_tab,  file.path(outf, sprintf("%s_cell_tab.feather", vars[ivar])))
+  write_feather(cell_tab,  file.path(outf, sprintf("%s_cell_tab1.feather", vars[ivar])))
  # writeRaster(ras,        file.path(outf, sprintf("%s_raster.grd", vars[ivar])))
-  write_feather(summ_tab, file.path(outf, sprintf("%s_summ_tab.feather", vars[ivar])))
-  write_feather(raw_tab,  file.path(outf, sprintf("%s_raw_tab.feather", vars[ivar])))
+  write_feather(summ_tab, file.path(outf, sprintf("%s_summ_tab1.feather", vars[ivar])))
+  write_feather(raw_tab,  file.path(outf, sprintf("%s_raw_tab1.feather", vars[ivar])))
 }
 

@@ -3,8 +3,14 @@
 \name{aes_region}
 \alias{aes_region}
 \alias{aes_region_ll}
+\alias{aes_region_simple}
 \title{Assessment regions for Southern Ocean ecosystems}
 \description{
+The full set is `aes_region`, which has a complementary data set in longitude/latitude
+called `aes_region_ll`. There is also simpler version of `aes_region` with the banks and plateaus
+included in the larger pieces `aes_region_simple`.
+}
+\details{
 These assessment regions are designed for assessing status and trends in 
 habitats, biogeochemistry, productivity, key species and ecosystem 
 attributes.  The assessments would be targeting policy makers to describe 
