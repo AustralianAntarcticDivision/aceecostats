@@ -58,10 +58,10 @@ path2seg <- function(x) {
   ## this is a trick of array logic to generate paired indexes from a sequence
   head(suppressWarnings(matrix(x, nrow = length(x) + 1, ncol = 2, byrow = FALSE)), -2L)
 }
-segmentlines <- function(x, col) {
+segmentlines <- function(x, col, ...) {
   ind <- path2seg(seq(nrow(x)))
   segments(x[ind[,1], 1], x[ind[,1], 2], x[ind[,2], 1], x[ind[,2], 2], 
-           col = col)
+           col = col, ...)
 }
 sector_colour <- function(secname) {
   setNames(c("#7CAE00", "#00BFC4","#C77CFF", "#F8766D"), 
@@ -142,7 +142,7 @@ if (do_ice) {
 }
 
 if (do_sst) {
-  outpdf <- "sst_assess_05.pdf"
+  outpdf <- "sst_assess_06.pdf"
   ras <- raster(file.path(datapath, "sst_raster.grd"))
  ## cell_tab <- read_feather(file.path(datapath, "sst_cell_tab.feather")) 
   summ_tab <- read_feather(file.path(datapath, "sst_summ_tab.feather")) 
@@ -155,7 +155,7 @@ if (do_sst) {
 
 
 if (do_chl) {
-  outpdf <- "chl_assess_05.pdf"
+  outpdf <- "chl_assess_06.pdf"
   ras <- raster(file.path(datapath,"chl_raster.grd"))
   cell_tab <- read_feather(file.path(datapath, "chl_cell_tab.feather"))  %>% 
     mutate(min = log(min), max = log(max), mean = log(mean))
@@ -173,7 +173,7 @@ if (do_chl) {
 
 
 total_areas <- aes_region@data %>% group_by(SectorName, Zone) %>% summarize(area_km2 = sum(area_km2))
-total_areas$area_factor <- 5000000
+total_areas$area_factor <- 3000000
 ## plot specifics
 lwdths <- c(6,4,2,1)
 lcols <- grey(seq(1, 0, length = nlevels(raw_tab$decade) + 2))[-c(1, 2)]
@@ -181,7 +181,7 @@ den.range <- c(0, 2)
 dplot <- TRUE
 if (dplot) pdf(outpdf)
 
-for (seas in c("Spring", "Summer", "Autumn", "Winter")) {
+for (seas in c( "Summer", "Winter")) {
   for (zone in c("Polar",  "Temperate")) {
   
 #for (seas in "Spring") {
@@ -247,17 +247,29 @@ for (seas in c("Spring", "Summer", "Autumn", "Winter")) {
         next; 
       } 
       
+      shouldersub <- subset(summ_tab, SectorName == sector & Zone == zone & Season == c(Summer = "Spring", Winter = "Autumn")[seas])
+      
+      
       with(asub, {
-        plot(sparkline_range, range(min), type = "n", axes = FALSE, xlab = "", ylab = "")
+        sparkline_yrange <- range(c(min, shouldersub$min))
+        plot(sparkline_range, sparkline_yrange, type = "n", axes = FALSE, xlab = "", ylab = "")
         segmentlines(cbind(date, min), col = lcols[decade])
         abline(h = mean(min))
         textheadtail(date, min)
- 
-        plot(sparkline_range, range(max), type = "n", axes = FALSE, xlab = "", ylab = "")
+      
+        ## do the shoulder season
+        segmentlines(cbind(shouldersub$date, shouldersub$min), col = lcols[decade], lty = 2)
+      
+        
+        sparkline_yrange <- range(c(max, shouldersub$max))
+        plot(sparkline_range, sparkline_yrange, type = "n", axes = FALSE, xlab = "", ylab = "")
         segmentlines(cbind(date, max), col = lcols[decade])
         abline(h = mean(max))
         textheadtail(date, max)
 
+        
+        ## do the shoulder season
+        segmentlines(cbind(shouldersub$date, shouldersub$max), col = lcols[decade], lty = 2)
         
       }
       )
