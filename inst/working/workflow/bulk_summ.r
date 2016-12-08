@@ -11,8 +11,8 @@
 #' @examples
 tabit <- function(x, na.rm = TRUE) {
   x <- tibble(val = values(x), cell_ = seq(ncell(x)))
-  if (na.rm = TRUE) {
-    x <- filter(!is.na(val))
+  if (na.rm ) {
+    x <- x %>% filter(!is.na(val))
   }
   x
 }
@@ -52,12 +52,12 @@ for (ivar in seq_along(vars)) {
   for (i in seq_along(listtab)) {
     asub <- which(segs == unique(segs)[i])
     a_obj <- setZ(readAll(subset(obj, asub)), dates[asub])
-    tab <- tabit(min(a_obj)) %>% rename(min = val) %>% mutate(date = dates[asub[1]]) 
+    tab <- tabit(min(a_obj, na.rm = TRUE)) %>% rename(min = val) %>% mutate(date = dates[asub[1]]) 
     #%>% 
     #  filter(min > 0)
-    tab$max<- values(max(a_obj))[tab$cell_]
-    tab$mean <- values(mean(a_obj))[tab$cell_]
-    tab$count <- values(calc(a_obj > 0, sum))[tab$cell_]
+    tab$max<- values(max(a_obj, na.rm = TRUE))[tab$cell_]
+    tab$mean <- values(mean(a_obj, na.rm = TRUE))[tab$cell_]
+    tab$count <- values(calc(a_obj > 0, sum, na.rm = TRUE))[tab$cell_]
     listtab[[i]] <- tab
     print(i)
   }
