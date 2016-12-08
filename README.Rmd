@@ -81,8 +81,6 @@ Write to shapefile.
 shapefile(aes_region, "my_aes_region.shp")
 ```
 
-(Leave your money on the fridge). 
-
 
 ## Metadata 
 

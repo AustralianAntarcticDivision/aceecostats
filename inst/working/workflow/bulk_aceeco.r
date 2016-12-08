@@ -116,4 +116,23 @@ sst <- build_bulk_file(sstfiles(), file.path(outf, "sst.grd"), read_i_sst, layer
 chl <- build_bulk_file(oc, file.path(outf, "chl.grd"), read_i_chl, layer_prefix = "month_chl")
 
 
-## now run summ-ary scripts
+tabit <- function(x) {
+  tibble(val = values(x), cell_ = seq(ncell(x))) %>% filter(!is.na(val))
+}
+
+decade_maker <- function(x) {
+  #cut(as.integer(format(x, "%Y")), c(1980, 1992, 2004, 2016), lab = c("1980-1992", "1991-2004","2002-2016"))
+  cut(as.integer(format(x, "%Y")), c(1981, 1990, 1999, 2008, 2016), lab = c("1981-1990", "1990-1999","1999-2008", "2008-2016"))
+}
+
+library(raster)
+outf <- "/mnt/acebulk"
+ret <- readRDS(file.path(outf, "south_retreat.rds"))
+
+adv <- readRDS(file.path(outf,"south_advance.rds") )
+duration <- ret - adv
+## if retreat is equal to one, it didn't retreat
+duration[ret == 1] <- 365
+obj <- setZ(duration, ISOdatetime(1979:2015, 2, 15, 0, 0, 0, tz = "GMT"))
+
+
