@@ -1,7 +1,7 @@
 
 #' Convert a raster to a data frame. 
 #' 
-#' Create a data frame from a single layer [raster::RasterLayer()]. 
+#' Create a data frame from a single layer [raster::RasterLayer()]. This is 
 #'
 #' @param x 
 #'
@@ -46,10 +46,10 @@ for (ivar in seq_along(vars)) {
   ## unique integer from 0 to ~nrow(sf)/90 for each three month period
   segs <- cumsum(c(0, abs(diff(unclass(factor(aes_season(getZ(obj))))))))
   
-  listtab <- vector("list", length(unique(segs)))
+  cell_tab <- vector("list", length(unique(segs)))
   dates <- as.POSIXct(getZ(obj))
 
-  for (i in seq_along(listtab)) {
+  for (i in seq_along(cell_tab)) {
     asub <- which(segs == unique(segs)[i])
     a_obj <- setZ(readAll(subset(obj, asub)), dates[asub])
     tab <- tabit(min(a_obj, na.rm = TRUE)) %>% rename(min = val) %>% mutate(date = dates[asub[1]]) 
@@ -58,13 +58,13 @@ for (ivar in seq_along(vars)) {
     tab$max<- values(max(a_obj, na.rm = TRUE))[tab$cell_]
     tab$mean <- values(mean(a_obj, na.rm = TRUE))[tab$cell_]
     tab$count <- values(calc(a_obj > 0, sum, na.rm = TRUE))[tab$cell_]
-    listtab[[i]] <- tab
+    cell_tab[[i]] <- tab
     print(i)
   }
 
   ## now process the summaries down
   
-  cell_tab <- bind_rows(listtab) %>% 
+  cell_tab <- bind_rows(cell_tab) %>% 
     mutate(decade = decade_maker(date)) %>% 
     filter(date <  maxdate) %>% 
     filter(!is.na(decade))
@@ -85,9 +85,12 @@ for (ivar in seq_along(vars)) {
     mutate(Season = aes_season(date))
   
   write_feather(cell_tab,  file.path(outf, sprintf("%s_cell_tab.feather", vars[ivar])))
+  rm(cell_tab)
  # writeRaster(ras,        file.path(outf, sprintf("%s_raster.grd", vars[ivar])))
   write_feather(summ_tab, file.path(outf, sprintf("%s_summ_tab.feather", vars[ivar])))
+  rm(summ_tab)
   write_feather(raw_tab,  file.path(outf, sprintf("%s_raw_tab.feather", vars[ivar])))
+  rm(raw_tab)
 }
 
 

@@ -96,7 +96,8 @@ read_i_chl <- function(i, files) {
 }
 
 
-## specify a working folder
+## specify a working folder where all cached file outputs will go
+## (plots all go into the working folder)
 outf <- "/mnt/acebulk"
 
 ## build up file collection specially for chlorophyll-a
@@ -116,15 +117,7 @@ sst <- build_bulk_file(sstfiles(), file.path(outf, "sst.grd"), read_i_sst, layer
 chl <- build_bulk_file(oc, file.path(outf, "chl.grd"), read_i_chl, layer_prefix = "month_chl")
 
 
-tabit <- function(x) {
-  tibble(val = values(x), cell_ = seq(ncell(x))) %>% filter(!is.na(val))
-}
-
-decade_maker <- function(x) {
-  #cut(as.integer(format(x, "%Y")), c(1980, 1992, 2004, 2016), lab = c("1980-1992", "1991-2004","2002-2016"))
-  cut(as.integer(format(x, "%Y")), c(1981, 1990, 1999, 2008, 2016), lab = c("1981-1990", "1990-1999","1999-2008", "2008-2016"))
-}
-
+## load previously calculated sea ice season metrics (seaiceson_southern_2016.Rmd)
 library(raster)
 outf <- "/mnt/acebulk"
 ret <- readRDS(file.path(outf, "south_retreat.rds"))

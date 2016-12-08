@@ -155,7 +155,7 @@ if (do_sst) {
 
 
 if (do_chl) {
-  outpdf <- "chl_assess_06.pdf"
+  outpdf <- "chl_assess_07.pdf"
   ras <- raster(file.path(datapath,"chl_raster.grd"))
   cell_tab <- read_feather(file.path(datapath, "chl_cell_tab.feather"))  %>% 
     mutate(min = log(min), max = log(max), mean = log(mean))
