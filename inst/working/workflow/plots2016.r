@@ -151,6 +151,7 @@ if (do_sst) {
   varlabel <- function(ttext) {
     bquote(.(ttext)~ "SST" ~ (degree*C)) 
   }
+  seclab <- 0
   min_max <- c(-5, 30)
 }
 
@@ -167,11 +168,11 @@ if (do_chl) {
   
   raw_tab <-  read_feather(file.path(datapath, "chl_raw_tab.feather")) 
   #%>%   mutate(min = log(min), max = log(max), mean = log(mean))
-  
+  seclab <- 0.1
   varlabel <- function(ttext) {
     bquote(.(ttext)~ "CHL-a mg m-3") 
   }
-  min_max <- c(0.001, 3)
+  min_max <- c(1e-1, 3)
 }
 
 
@@ -183,11 +184,7 @@ total_areas$area_factor <- total_areas$area_km2 / c(Atlantic = 1.3, EastPacific 
 lwdths <- c(6,4,2,1)
 lcols <- grey(seq(1, 0, length = nlevels(raw_tab$decade) + 2))[-c(1, 2)]
 den.range <- c(0, 2)
-dplot <- FALSE
-do_rect <- function(usr, col) {
-  rect(usr[1], usr[3], usr[2],usr[4],
-       col = col)
-}
+dplot <- TRUE
 
 if (dplot) pdf(outpdf)
 
@@ -204,7 +201,7 @@ for (seas in c( "Summer", "Winter")) {
       this_area <- subset(total_areas, Zone == zone & SectorName == sector)
       den.range <- c(0, this_area$area_km2/this_area$area_factor)
       titletext<- paste(seas, zone)
-      asub <- subset(raw_tab, SectorName == sector & Zone == zone & Season == seas)
+      asub <- dplyr::filter(raw_tab, SectorName == sector & Zone == zone & Season == seas)
       if (nrow(asub) < 10) {
         dummyplot()
         dummyplot()
@@ -212,7 +209,10 @@ for (seas in c( "Summer", "Winter")) {
       }
       with(asub, {
         plot(min_max, den.range, type = "n", axes = FALSE, xlab = "", ylab = "", log = dolog)
-        polygon(expand.grid(x = min_max, y = den.range)[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
+        #usr <- par("usr")
+        usr <- c(0.000000001, 10, 0, 100)
+        polygon(expand.grid(x = usr[1:2], y = usr[3:4])[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
+        #polygon(expand.grid(x = min_max, y = den.range)[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
         if (sector %in% c("Atlantic", "EastPacific")) mtext("min", side = 2)
         text(0, den.range[2]*0.9, lab = sector_name(sector), cex=0.5)
         for (k in seq_along(lcols)) {
@@ -224,7 +224,8 @@ for (seas in c( "Summer", "Winter")) {
           lines(dens.df, col=lcols[k], lwd=lwdths[k])
           print(k)
         }
-        usr <- par("usr")
+        
+        #usr <- par("usr")
         # if (dolog == "x") usr[c()] <- log(usr)
         
         #do_rect(usr, paste0(sector_colour(sector),40))
@@ -232,13 +233,18 @@ for (seas in c( "Summer", "Winter")) {
         #rect(par("usr")[1],par("usr")[3],par("usr")[2],par("usr")[4],
         #     col = paste0(sector_colour(sector),40))
         box()
+      
         mtext(side=1, varlabel(titletext) ,outer =T, line=1.5, cex=1)
-        plot(min_max, den.range, type = "n", axes = FALSE, xlab = "", ylab = "max")
-        polygon(expand.grid(x = min_max, y = den.range)[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
+        plot(min_max, den.range, type = "n", axes = FALSE, xlab = "", ylab = "max", log = dolog)
+        if (grepl("Pacific", sector)) axis(1)
+        usr <- c(0.000000001, 10, 0, 100)
+        #polygon(expand.grid(x = min_max, y = den.range)[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
+        #usr <- par("usr")
+        polygon(expand.grid(x = usr[1:2], y = usr[3:4])[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
         if (sector %in% c("Atlantic", "EastPacific")) mtext("max", side = 2)
-        text(0, den.range[2]*0.9, lab = sector_name(sector), cex=0.5)
+        text(seclab[1], den.range[2]*0.9, lab = sector_name(sector), cex=0.5)
         for (k in seq_along(lcols)) {
-          vals <- min[decade == decselect(k)]
+          vals <- max[decade == decselect(k)]
           if (length(vals) < 1 | all(is.na(vals))) next;
           if (length(vals) < 1) next;
           wgt <- area[decade == decselect(k)]
@@ -248,7 +254,7 @@ for (seas in c( "Summer", "Winter")) {
        # rect(par("usr")[1],par("usr")[3],par("usr")[2],par("usr")[4],
       #       col = paste0(sector_colour(sector),40))
         box()
-        if (grepl("Pacific", sector)) axis(1)
+      
         
       }
       
