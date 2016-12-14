@@ -6,45 +6,45 @@ dummyplot <- function() plot(1, 1, type = "p", axes = FALSE, xlab = "", ylab = "
 layout_m <- function() {
   tx <- textConnection(
     "1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
-  1,1,9,9,9,9,9,1,3,3,11,11,11,11,11,3
-  1,1,9,9,9,9,9,1,3,3,11,11,11,11,11,3
-  1,1,9,9,9,9,9,1,3,3,11,11,11,11,11,3
-  1,1,9,9,9,9,9,1,3,3,11,11,11,11,11,3
-  1,1,9,9,9,9,9,1,3,3,11,11,11,11,11,3
-  1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
-  1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
-  1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
-  1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
-  2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4
-  2,2,10,10,10,10,10,2,4,4,12,12,12,12,12,4
-  2,2,10,10,10,10,10,2,4,4,12,12,12,12,12,4
-  2,2,10,10,10,10,10,2,4,4,12,12,12,12,12,4
-  2,2,10,10,10,10,10,2,4,4,12,12,12,12,12,4
-  2,2,10,10,10,10,10,2,4,4,12,12,12,12,12,4
-  2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4
-  2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4
-  2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4
-  2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4
-  5,5,5,5,5,5,5,5,7,7,7,7,7,7,7,7
-  5,5,13,13,13,13,13,5,7,7,15,15,15,15,15,7
-  5,5,13,13,13,13,13,5,7,7,15,15,15,15,15,7
-  5,5,13,13,13,13,13,5,7,7,15,15,15,15,15,7
-  5,5,13,13,13,13,13,5,7,7,15,15,15,15,15,7
-  5,5,13,13,13,13,13,5,7,7,15,15,15,15,15,7
-  5,5,5,5,5,5,5,5,7,7,7,7,7,7,7,7
-  5,5,5,5,5,5,5,5,7,7,7,7,7,7,7,7
-  5,5,5,5,5,5,5,5,7,7,7,7,7,7,7,7
-  5,5,5,5,5,5,5,5,7,7,7,7,7,7,7,7
-  6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8
-  6,6,14,14,14,14,14,6,8,8,16,16,16,16,16,8
-  6,6,14,14,14,14,14,6,8,8,16,16,16,16,16,8
-  6,6,14,14,14,14,14,6,8,8,16,16,16,16,16,8
-  6,6,14,14,14,14,14,6,8,8,16,16,16,16,16,8
-  6,6,14,14,14,14,14,6,8,8,16,16,16,16,16,8
-  6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8
-  6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8
-  6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8
-  6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8")
+    1,1,9,9,9,9,9,1,3,3,11,11,11,11,11,3
+    1,1,9,9,9,9,9,1,3,3,11,11,11,11,11,3
+    1,1,9,9,9,9,9,1,3,3,11,11,11,11,11,3
+    1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
+    1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
+    1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
+    1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
+    1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
+    1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
+    2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4
+    2,2,10,10,10,10,10,2,4,4,12,12,12,12,12,4
+    2,2,10,10,10,10,10,2,4,4,12,12,12,12,12,4
+    2,2,10,10,10,10,10,2,4,4,12,12,12,12,12,4
+    2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4
+    2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4
+    2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4
+    2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4
+    2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4
+    2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4
+    5,5,5,5,5,5,5,5,7,7,7,7,7,7,7,7
+    5,5,13,13,13,13,13,5,7,7,15,15,15,15,15,7
+    5,5,13,13,13,13,13,5,7,7,15,15,15,15,15,7
+    5,5,13,13,13,13,13,5,7,7,15,15,15,15,15,7
+    5,5,5,5,5,5,5,5,7,7,7,7,7,7,7,7
+    5,5,5,5,5,5,5,5,7,7,7,7,7,7,7,7
+    5,5,5,5,5,5,5,5,7,7,7,7,7,7,7,7
+    5,5,5,5,5,5,5,5,7,7,7,7,7,7,7,7
+    5,5,5,5,5,5,5,5,7,7,7,7,7,7,7,7
+    5,5,5,5,5,5,5,5,7,7,7,7,7,7,7,7
+    6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8
+    6,6,14,14,14,14,14,6,8,8,16,16,16,16,16,8
+    6,6,14,14,14,14,14,6,8,8,16,16,16,16,16,8
+    6,6,14,14,14,14,14,6,8,8,16,16,16,16,16,8
+    6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8
+    6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8
+    6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8
+    6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8
+    6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8
+    6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8")
   as.matrix(read.csv(tx, header=F))
 }
 textheadtail <- function(x, y) {
@@ -112,7 +112,7 @@ sparkline_range <- ISOdatetime(c(1980, 2016), c(1, 11), 1, 0, 0, 0, tz = "GMT")
 
 ## variable specific clauses
 if (do_mag) {
- outpdf <- "mag_assess_03.pdf"
+  outpdf <- "mag_assess_03.pdf"
   ras <- raster(file.path(datapath, "mag_raster.grd"))
   cell_tab <- read_feather(file.path(datapath, "mag_tab.feather")) %>% 
     filter(min_mag > 0) %>% 
@@ -128,7 +128,7 @@ if (do_mag) {
     stopifnot(length(n) == 1L)
     c("1991-2004","2002-2016")[n]
   }
- # lcols <- c("gray40", "black")
+  # lcols <- c("gray40", "black")
 }
 if (do_ice) {
   outpdf <- "ice_assess_04.pdf"
@@ -143,8 +143,9 @@ if (do_ice) {
 
 if (do_sst) {
   outpdf <- "sst_assess_06.pdf"
+  dolog = ""
   ras <- raster(file.path(datapath, "sst_raster.grd"))
- ## cell_tab <- read_feather(file.path(datapath, "sst_cell_tab.feather")) 
+  ## cell_tab <- read_feather(file.path(datapath, "sst_cell_tab.feather")) 
   summ_tab <- read_feather(file.path(datapath, "sst_summ_tab.feather")) 
   raw_tab <-  read_feather(file.path(datapath, "sst_raw_tab.feather")) 
   varlabel <- function(ttext) {
@@ -155,38 +156,47 @@ if (do_sst) {
 
 
 if (do_chl) {
-  outpdf <- "chl_assess_07.pdf"
+  outpdf <- "chl_assess_08.pdf"
+  dolog = "x"
   ras <- raster(file.path(datapath,"chl_raster.grd"))
-  cell_tab <- read_feather(file.path(datapath, "chl_cell_tab.feather"))  %>% 
-    mutate(min = log(min), max = log(max), mean = log(mean))
-  summ_tab <- read_feather(file.path(datapath, "chl_summ_tab.feather")) %>% 
-    mutate(min = log(min), max = log(max))  ## no mean
+  ## not used
+  ## cell_tab <- read_feather(file.path(datapath, "chl_cell_tab.feather"))  
+  #%>% mutate(min = log(min), max = log(max), mean = log(mean))
+  summ_tab <- read_feather(file.path(datapath, "chl_summ_tab.feather")) 
+  #%>%  mutate(min = log(min), max = log(max))  ## no mean
   
-  raw_tab <-  read_feather(file.path(datapath, "chl_raw_tab.feather")) %>% 
-    mutate(min = log(min), max = log(max), mean = log(mean))
+  raw_tab <-  read_feather(file.path(datapath, "chl_raw_tab.feather")) 
+  #%>%   mutate(min = log(min), max = log(max), mean = log(mean))
   
   varlabel <- function(ttext) {
-    bquote(.(ttext)~ "ln CHL-a mg m-3") 
+    bquote(.(ttext)~ "CHL-a mg m-3") 
   }
-  min_max <- log(c(5e-2, 10))
+  min_max <- c(0.001, 3)
 }
 
 
 total_areas <- aes_region@data %>% group_by(SectorName, Zone) %>% summarize(area_km2 = sum(area_km2))
-total_areas$area_factor <- 3000000
+total_areas$area_factor <- total_areas$area_km2 / c(Atlantic = 1.3, EastPacific = 1.4, Indian = 1.6, WestPacific = 1.15)[total_areas$SectorName]
+
+#total_areas$area_factor <- 3000000
 ## plot specifics
 lwdths <- c(6,4,2,1)
 lcols <- grey(seq(1, 0, length = nlevels(raw_tab$decade) + 2))[-c(1, 2)]
 den.range <- c(0, 2)
-dplot <- TRUE
+dplot <- FALSE
+do_rect <- function(usr, col) {
+  rect(usr[1], usr[3], usr[2],usr[4],
+       col = col)
+}
+
 if (dplot) pdf(outpdf)
 
 for (seas in c( "Summer", "Winter")) {
   for (zone in c("Polar",  "Temperate")) {
-  
-#for (seas in "Spring") {
-#  for (zone in "Polar") {
-   
+    
+    #for (seas in "Spring") {
+    #  for (zone in "Polar") {
+    
     layout(layout_m())
     op <- par(mar=c(0,0,0,0), oma=c(2.5, 0.95, 0.5, 0.5), tcl=0.2, cex=1.25, mgp=c(3, 0.25, 0), cex.axis=0.75, col="gray40", col.axis="gray40", fg="gray40")
     ## DENSITY PLOTS
@@ -201,23 +211,30 @@ for (seas in c( "Summer", "Winter")) {
         next;
       }
       with(asub, {
-        plot(min_max, den.range, type = "n", axes = FALSE, xlab = "", ylab = "")
+        plot(min_max, den.range, type = "n", axes = FALSE, xlab = "", ylab = "", log = dolog)
+        polygon(expand.grid(x = min_max, y = den.range)[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
         if (sector %in% c("Atlantic", "EastPacific")) mtext("min", side = 2)
         text(0, den.range[2]*0.9, lab = sector_name(sector), cex=0.5)
         for (k in seq_along(lcols)) {
           vals <- min[decade == decselect(k)]
           wgt <- area[decade == decselect(k)] 
           if (length(vals) < 1 | all(is.na(vals))) next;
-        
+          
           dens.df <- do_density(vals, w = wgt)
           lines(dens.df, col=lcols[k], lwd=lwdths[k])
           print(k)
         }
-        rect(par("usr")[1],par("usr")[3],par("usr")[2],par("usr")[4],
-             col = paste0(sector_colour(sector),40))
+        usr <- par("usr")
+        # if (dolog == "x") usr[c()] <- log(usr)
+        
+        #do_rect(usr, paste0(sector_colour(sector),40))
+        
+        #rect(par("usr")[1],par("usr")[3],par("usr")[2],par("usr")[4],
+        #     col = paste0(sector_colour(sector),40))
         box()
         mtext(side=1, varlabel(titletext) ,outer =T, line=1.5, cex=1)
         plot(min_max, den.range, type = "n", axes = FALSE, xlab = "", ylab = "max")
+        polygon(expand.grid(x = min_max, y = den.range)[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
         if (sector %in% c("Atlantic", "EastPacific")) mtext("max", side = 2)
         text(0, den.range[2]*0.9, lab = sector_name(sector), cex=0.5)
         for (k in seq_along(lcols)) {
@@ -228,16 +245,17 @@ for (seas in c( "Summer", "Winter")) {
           dens.df <- do_density(max[decade == decselect(k)], wgt)
           lines(dens.df, col=lcols[k], lwd=lwdths[k])
         }
-        rect(par("usr")[1],par("usr")[3],par("usr")[2],par("usr")[4],
-             col = paste0(sector_colour(sector),40))
+       # rect(par("usr")[1],par("usr")[3],par("usr")[2],par("usr")[4],
+      #       col = paste0(sector_colour(sector),40))
         box()
         if (grepl("Pacific", sector)) axis(1)
-        mtext(side=1, varlabel(titletext) ,outer =T, line=1.5, cex=1)
+        
       }
+      
       )
       
     }
-    
+    mtext(side=1, varlabel(titletext) ,outer =T, line=1.5, cex=1)
     ## SPARKLINES
     for (sector in c("Atlantic",  "Indian", "EastPacific", "WestPacific")) {
       asub <- subset(summ_tab, SectorName == sector & Zone == zone & Season == seas)
@@ -256,17 +274,17 @@ for (seas in c( "Summer", "Winter")) {
         segmentlines(cbind(date, min), col = lcols[decade])
         abline(h = mean(min))
         textheadtail(date, min)
-      
+        
         ## do the shoulder season
         segmentlines(cbind(shouldersub$date, shouldersub$min), col = lcols[decade], lty = 2)
-      
+        
         
         sparkline_yrange <- range(c(max, shouldersub$max))
         plot(sparkline_range, sparkline_yrange, type = "n", axes = FALSE, xlab = "", ylab = "")
         segmentlines(cbind(date, max), col = lcols[decade])
         abline(h = mean(max))
         textheadtail(date, max)
-
+        
         
         ## do the shoulder season
         segmentlines(cbind(shouldersub$date, shouldersub$max), col = lcols[decade], lty = 2)
