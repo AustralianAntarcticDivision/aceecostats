@@ -1,12 +1,7 @@
 
 
 
-
-## worker plot functions
-
-dummyplot <- function() plot(1, 1, type = "p", axes = FALSE, xlab = "", ylab = "")
-
-si_layout_m <- function() {
+ice_duration_layout_m <- function() {
   tx <- textConnection(
     "1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
     1,1,5,5,5,5,5,1,3,3,7,7,7,7,7,3
@@ -31,46 +26,6 @@ si_layout_m <- function() {
   as.matrix(read.csv(tx, header=F))
 }
 
-textheadtail <- function(x, y) {
-  xx <- c(head(x, 1), tail(x, 1))
-  yy <- c(head(y, 1), tail(y, 1))
-  points(xx, yy, pch=19, cex=0.3, col=c("grey","black"))
-  text(xx, yy, label = round(yy, 1), pos=c(2, 4), xpd=NA, cex=0.65, offset=0.2)
-  
-}
-path2seg <- function(x) {
-  ## this is a trick of array logic to generate paired indexes from a sequence
-  head(suppressWarnings(matrix(x, nrow = length(x) + 1, ncol = 2, byrow = FALSE)), -2L)
-}
-segmentlines <- function(x, col) {
-  ind <- path2seg(seq(nrow(x)))
-  segments(x[ind[,1], 1], x[ind[,1], 2], x[ind[,2], 1], x[ind[,2], 2], 
-           col = col)
-}
-sector_colour <- function(secname) {
-  setNames(c("#7CAE00", "#00BFC4","#C77CFF", "#F8766D"), 
-           c("Atlantic","Indian", "EastPacific","WestPacific"))[secname]
-  
-}
-sector_name <- function(secname) {
-  setNames(c("Atlantic","Indian","East\nPacific","West\nPacific"), 
-           c("Atlantic","Indian", "EastPacific","WestPacific"))[secname]
-}
-decselect <- function(n) {
-  stopifnot(length(n) == 1L)
-  #c("1980-1992", "1991-2004","2002-2016")[n]
-  c("1981-1990", "1990-1999","1999-2008", "2008-2016")[n]
-}
-do_density <- function(v) {
-  the.his <- hist(v, breaks=50, plot = FALSE)
-  multiplier <- (the.his$counts / the.his$density)[1]
-  the.den <- density(v, from=min(v), to=max(v))
-  scl <- function(x) (x - min(x))/diff(range(x))
-  the.den.df<- data.frame(x=the.den$x, y=scl(the.den$y))
-  the.den.df <- the.den.df[the.den.df$x >= min(v) & the.den.df$x <= max(v),]
-  the.den.df$y[the.den.df$y > 1] <- 1
-  the.den.df
-}
 
 
 ## preparation
@@ -88,7 +43,7 @@ outf <- "/mnt/acebulk"
 ## date range for the sparkline
 sparkline_range <- ISOdatetime(c(1980, 2016), c(1, 11), 1, 0, 0, 0, tz = "GMT")
 
-outpdf <- "ice_assess_duration05.pdf"
+outpdf <- "inst/workflow/graphics/ice_assess_duration06.pdf"
 ras <- raster(file.path(outf,"seaice_duration_raster.grd"))
 cell_tab <- read_feather(file.path(outf,"seaice_duration_cell_tab.feather")) 
 raw_tab <- read_feather(file.path(outf, "seaice_duration_raw_tab.feather"))
@@ -120,7 +75,7 @@ shelf <- "Ocean"
 for (shelf in c("Ocean", "Shelf")) {
   #for (seas in "Spring") {
   #  for (zone in "Polar") {
-  layout(si_layout_m())
+  layout(ice_duration_layout_m())
   op <- par(mar=c(0,0,0,0), oma=c(2.5, 0.95, 0.5, 0.5), tcl=0.2, cex=1.25, mgp=c(3, 0.25, 0), cex.axis=0.75, col="gray40", col.axis="gray40", fg="gray40")
   ## DENSITY PLOTS
   for (sector in c("Atlantic",  "EastPacific", "Indian", "WestPacific")) {
