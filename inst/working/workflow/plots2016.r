@@ -142,7 +142,7 @@ if (do_ice) {
 }
 
 if (do_sst) {
-  outpdf <- "sst_assess_06.pdf"
+  outpdf <- "inst/working/sst_assess_08.pdf"
   dolog = ""
   ras <- raster(file.path(datapath, "sst_raster.grd"))
   ## cell_tab <- read_feather(file.path(datapath, "sst_cell_tab.feather")) 
@@ -152,12 +152,13 @@ if (do_sst) {
     bquote(.(ttext)~ "SST" ~ (degree*C)) 
   }
   seclab <- 0
-  min_max <- c(-5, 30)
+  min_max <- c(-2, 22)
+  usr <- c(-5, 100, -5, 100)
 }
 
 
 if (do_chl) {
-  outpdf <- "chl_assess_08.pdf"
+  outpdf <- "inst/working/chl_assess_09.pdf"
   dolog = "x"
   ras <- raster(file.path(datapath,"chl_raster.grd"))
   ## not used
@@ -168,11 +169,12 @@ if (do_chl) {
   
   raw_tab <-  read_feather(file.path(datapath, "chl_raw_tab.feather")) 
   #%>%   mutate(min = log(min), max = log(max), mean = log(mean))
-  seclab <- 0.1
+  seclab <- 0.06
   varlabel <- function(ttext) {
     bquote(.(ttext)~ "CHL-a mg m-3") 
   }
-  min_max <- c(1e-1, 3)
+  min_max <- c(0.01, 3)
+  usr <- c(0.000000001, 100, -5, 100)
 }
 
 
@@ -185,9 +187,10 @@ lwdths <- c(6,4,2,1)
 lcols <- grey(seq(1, 0, length = nlevels(raw_tab$decade) + 2))[-c(1, 2)]
 den.range <- c(0, 2)
 dplot <- TRUE
-
+scaleval <- if (dolog == "x")  function(x) log(x) else function(x) x
+unscaleval <- if(dolog == "x") function(x) exp(x) else function(x) x
+seas <- "Summer"; zone <- "Polar"
 if (dplot) pdf(outpdf)
-
 for (seas in c( "Summer", "Winter")) {
   for (zone in c("Polar",  "Temperate")) {
     
@@ -210,18 +213,18 @@ for (seas in c( "Summer", "Winter")) {
       with(asub, {
         plot(min_max, den.range, type = "n", axes = FALSE, xlab = "", ylab = "", log = dolog)
         #usr <- par("usr")
-        usr <- c(0.000000001, 10, 0, 100)
+        
         polygon(expand.grid(x = usr[1:2], y = usr[3:4])[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
         #polygon(expand.grid(x = min_max, y = den.range)[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
         if (sector %in% c("Atlantic", "EastPacific")) mtext("min", side = 2)
-        text(0, den.range[2]*0.9, lab = sector_name(sector), cex=0.5)
+       # text(0, den.range[2]*0.9, lab = sector_name(sector), cex=0.5)
         for (k in seq_along(lcols)) {
           vals <- min[decade == decselect(k)]
           wgt <- area[decade == decselect(k)] 
           if (length(vals) < 1 | all(is.na(vals))) next;
           
-          dens.df <- do_density(vals, w = wgt)
-          lines(dens.df, col=lcols[k], lwd=lwdths[k])
+          dens.df <- do_density(scaleval(vals), w = wgt)
+          lines(unscaleval(dens.df$x), dens.df$y, col=lcols[k], lwd=lwdths[k])
           print(k)
         }
         
@@ -237,7 +240,7 @@ for (seas in c( "Summer", "Winter")) {
         mtext(side=1, varlabel(titletext) ,outer =T, line=1.5, cex=1)
         plot(min_max, den.range, type = "n", axes = FALSE, xlab = "", ylab = "max", log = dolog)
         if (grepl("Pacific", sector)) axis(1)
-        usr <- c(0.000000001, 10, 0, 100)
+     
         #polygon(expand.grid(x = min_max, y = den.range)[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
         #usr <- par("usr")
         polygon(expand.grid(x = usr[1:2], y = usr[3:4])[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
@@ -248,8 +251,8 @@ for (seas in c( "Summer", "Winter")) {
           if (length(vals) < 1 | all(is.na(vals))) next;
           if (length(vals) < 1) next;
           wgt <- area[decade == decselect(k)]
-          dens.df <- do_density(max[decade == decselect(k)], wgt)
-          lines(dens.df, col=lcols[k], lwd=lwdths[k])
+          dens.df <- do_density(scaleval(vals), w = wgt)
+          lines(unscaleval(dens.df$x), dens.df$y, col=lcols[k], lwd=lwdths[k])
         }
        # rect(par("usr")[1],par("usr")[3],par("usr")[2],par("usr")[4],
       #       col = paste0(sector_colour(sector),40))
