@@ -3,6 +3,7 @@
 #' @return tibble with name and col-our
 #' @export
 #' @importFrom grDevices rgb
+#' @importFrom stats setNames
 #' @examples
 #' aes_zone_cols()
 aes_zone_cols <- function() {
