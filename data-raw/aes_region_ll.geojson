@@ -12,7 +12,8 @@
         "Name": "Atlantic_Polar_BanksPlateaus",
         "Shelf": "Ocean",
         "area_km2": 501423.6358,
-        "fill": "#7CAE0099"
+        "fill-opacity": 0.6,
+        "fill": "#7CAE00"
       },
       "geometry": {
         "type": "Polygon",
@@ -3438,7 +3439,8 @@
         "Name": "Atlantic_Polar_Continent",
         "Shelf": "Shelf",
         "area_km2": 1084547.9528,
-        "fill": "#7CAE00FF"
+        "fill-opacity": 1,
+        "fill": "#7CAE00"
       },
       "geometry": {
         "type": "Polygon",
@@ -5850,7 +5852,8 @@
         "Name": "Atlantic_Polar_Deep",
         "Shelf": "Ocean",
         "area_km2": 19353773.3612,
-        "fill": "#7CAE0099"
+        "fill-opacity": 0.6,
+        "fill": "#7CAE00"
       },
       "geometry": {
         "type": "Polygon",
@@ -12482,7 +12485,8 @@
         "Name": "Atlantic_Temperate_BanksPlateaus",
         "Shelf": "Ocean",
         "area_km2": 2108929.3404,
-        "fill": "#7CAE004D"
+        "fill-opacity": 0.302,
+        "fill": "#7CAE00"
       },
       "geometry": {
         "type": "Polygon",
@@ -16213,7 +16217,8 @@
         "Name": "Atlantic_Temperate_Deep",
         "Shelf": "Ocean",
         "area_km2": 13562422.1063,
-        "fill": "#7CAE004D"
+        "fill-opacity": 0.302,
+        "fill": "#7CAE00"
       },
       "geometry": {
         "type": "Polygon",
@@ -20799,7 +20804,8 @@
         "Name": "EastPacific_Polar_Continent",
         "Shelf": "Shelf",
         "area_km2": 724857.5412,
-        "fill": "#C77CFFFF"
+        "fill-opacity": 1,
+        "fill": "#C77CFF"
       },
       "geometry": {
         "type": "Polygon",
@@ -22187,7 +22193,8 @@
         "Name": "EastPacific_Polar_Deep",
         "Shelf": "Ocean",
         "area_km2": 3241353.3593,
-        "fill": "#C77CFF99"
+        "fill-opacity": 0.6,
+        "fill": "#C77CFF"
       },
       "geometry": {
         "type": "Polygon",
@@ -23375,7 +23382,8 @@
         "Name": "EastPacific_Temperate_BanksPlateaus",
         "Shelf": "Ocean",
         "area_km2": 405139.119,
-        "fill": "#C77CFF4D"
+        "fill-opacity": 0.302,
+        "fill": "#C77CFF"
       },
       "geometry": {
         "type": "Polygon",
@@ -25880,7 +25888,8 @@
         "Name": "EastPacific_Temperate_Deep",
         "Shelf": "Ocean",
         "area_km2": 10168793.897,
-        "fill": "#C77CFF4D"
+        "fill-opacity": 0.302,
+        "fill": "#C77CFF"
       },
       "geometry": {
         "type": "Polygon",
@@ -27530,7 +27539,8 @@
         "Name": "Indian_Polar_BanksPlateaus",
         "Shelf": "Ocean",
         "area_km2": 676845.5655,
-        "fill": "#00BFC499"
+        "fill-opacity": 0.6,
+        "fill": "#00BFC4"
       },
       "geometry": {
         "type": "Polygon",
@@ -28982,7 +28992,8 @@
         "Name": "Indian_Polar_Continent",
         "Shelf": "Shelf",
         "area_km2": 706453.8107,
-        "fill": "#00BFC4FF"
+        "fill-opacity": 1,
+        "fill": "#00BFC4"
       },
       "geometry": {
         "type": "Polygon",
@@ -30534,7 +30545,8 @@
         "Name": "Indian_Polar_Deep",
         "Shelf": "Ocean",
         "area_km2": 11022311.3218,
-        "fill": "#00BFC499"
+        "fill-opacity": 0.6,
+        "fill": "#00BFC4"
       },
       "geometry": {
         "type": "Polygon",
@@ -33979,7 +33991,8 @@
         "Name": "Indian_Temperate_BanksPlateaus",
         "Shelf": "Ocean",
         "area_km2": 694668.9282,
-        "fill": "#00BFC44D"
+        "fill-opacity": 0.302,
+        "fill": "#00BFC4"
       },
       "geometry": {
         "type": "Polygon",
@@ -36109,7 +36122,8 @@
         "Name": "Indian_Temperate_Deep",
         "Shelf": "Ocean",
         "area_km2": 12373702.7623,
-        "fill": "#00BFC44D"
+        "fill-opacity": 0.302,
+        "fill": "#00BFC4"
       },
       "geometry": {
         "type": "Polygon",
@@ -38888,7 +38902,8 @@
         "Name": "WestPacific_Polar_BanksPlateaus",
         "Shelf": "Ocean",
         "area_km2": 32840.0515,
-        "fill": "#F8766D99"
+        "fill-opacity": 0.6,
+        "fill": "#F8766D"
       },
       "geometry": {
         "type": "Polygon",
@@ -39642,7 +39657,8 @@
         "Name": "WestPacific_Polar_Continent",
         "Shelf": "Shelf",
         "area_km2": 885409.002,
-        "fill": "#F8766DFF"
+        "fill-opacity": 1,
+        "fill": "#F8766D"
       },
       "geometry": {
         "type": "Polygon",
@@ -41263,7 +41279,8 @@
         "Name": "WestPacific_Polar_Deep",
         "Shelf": "Ocean",
         "area_km2": 8103336.2396,
-        "fill": "#F8766D99"
+        "fill-opacity": 0.6,
+        "fill": "#F8766D"
       },
       "geometry": {
         "type": "Polygon",
@@ -43957,7 +43974,8 @@
         "Name": "WestPacific_Temperate_BanksPlateaus",
         "Shelf": "Ocean",
         "area_km2": 2552842.0756,
-        "fill": "#F8766D4D"
+        "fill-opacity": 0.302,
+        "fill": "#F8766D"
       },
       "geometry": {
         "type": "Polygon",
@@ -48563,7 +48581,8 @@
         "Name": "WestPacific_Temperate_Deep",
         "Shelf": "Ocean",
         "area_km2": 20472658.2013,
-        "fill": "#F8766D4D"
+        "fill-opacity": 0.302,
+        "fill": "#F8766D"
       },
       "geometry": {
         "type": "Polygon",

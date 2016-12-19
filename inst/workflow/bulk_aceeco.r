@@ -96,7 +96,8 @@ read_i_chl <- function(i, files) {
 }
 
 
-## specify a working folder
+## specify a working folder where all cached file outputs will go
+## (plots all go into the working folder)
 outf <- "/mnt/acebulk"
 
 ## build up file collection specially for chlorophyll-a
@@ -116,4 +117,15 @@ sst <- build_bulk_file(sstfiles(), file.path(outf, "sst.grd"), read_i_sst, layer
 chl <- build_bulk_file(oc, file.path(outf, "chl.grd"), read_i_chl, layer_prefix = "month_chl")
 
 
-## now run summ-ary scripts
+## load previously calculated sea ice season metrics (seaiceson_southern_2016.Rmd)
+library(raster)
+outf <- "/mnt/acebulk"
+ret <- readRDS(file.path(outf, "south_retreat.rds"))
+
+adv <- readRDS(file.path(outf,"south_advance.rds") )
+duration <- ret - adv
+## if retreat is equal to one, it didn't retreat
+duration[ret == 1] <- 365
+obj <- setZ(duration, ISOdatetime(1979:2015, 2, 15, 0, 0, 0, tz = "GMT"))
+
+
