@@ -43,7 +43,7 @@ outf <- "/mnt/acebulk"
 ## date range for the sparkline
 sparkline_range <- ISOdatetime(c(1980, 2016), c(1, 11), 1, 0, 0, 0, tz = "GMT")
 
-outpdf <- "inst/workflow/graphics/ice_assess_duration06.pdf"
+outpdf <- "inst/workflow/graphics/ice_DRAFT-001_y-axis.pdf"
 ras <- raster(file.path(outf,"seaice_duration_raster.grd"))
 cell_tab <- read_feather(file.path(outf,"seaice_duration_cell_tab.feather")) 
 raw_tab <- read_feather(file.path(outf, "seaice_duration_raw_tab.feather"))
@@ -73,6 +73,7 @@ zone <- "Polar"
 shelf <- "Ocean"
 
 for (shelf in c("Ocean", "Shelf")) {
+
   #for (seas in "Spring") {
   #  for (zone in "Polar") {
   layout(ice_duration_layout_m())
@@ -94,18 +95,30 @@ for (shelf in c("Ocean", "Shelf")) {
       text(30, den.range[2]*0.9, lab = sector_name(sector), cex=0.5)
       for (k in seq_along(lcols)) {
         vals <- dur[decade == decselect(k)]
-        
+        wgt <- area[decade == decselect(k)] 
+       
         if (length(vals) < 1 | all(is.na(vals))) next;
+        dens.df <- do_density(vals, w = wgt)
         
-        dens.df <- do_density(vals)
+        #dens.df <- do_density(vals)
         lines(dens.df, col=lcols[k], lwd=lwdths[k])
-        print(k)
+        #print(k)
       }
+      
+      the_sector_area <- this_area$area_km2
+      the_density_area <- sum(area)
+      the_density_max <- max(do_density(dur, area)$y)
+      text(200, 0.5, lab = sprintf("TOTAL Area km^2 \n%s", format(the_sector_area, sci = TRUE, digits = 2)), cex = 0.5)
+    axis(2, at = c(0.5, 1), las = 1, mgp = c(3, -1.95, 0),cex.axis = 0.5,   labels = format(c(the_sector_area/(max(den.range) * c(0.5, 1))), sci = TRUE, digits = 2))
+      # print(the_sector_area)
+      # print(the_density_area)
+      # print(the_density_max)
+      # print("a")
       rect(par("usr")[1],par("usr")[3],par("usr")[2],par("usr")[4],
            col = paste0(sector_colour(sector),40))
       box()
       mtext(side=1, varlabel(titletext) ,outer =T, line=1.5, cex=1)
-      axis(1)
+      if (sector %in% c("EastPacific", "WestPacific")) axis(1); 
     }
     )
     
@@ -134,8 +147,9 @@ for (shelf in c("Ocean", "Shelf")) {
     )
     
   }
-  par(op)
   
+  par(op)
+
 }
 
 if (dplot) dev.off()
