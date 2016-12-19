@@ -9,31 +9,27 @@ library(dplyr)
 ## local path to required cache files
 datapath <- "/mnt/acebulk"
 
-do_chl <- TRUE
 ## date range for the sparkline
 sparkline_range <- mk_sparkline_range()
 
 
 
-if (do_chl) {
-  outpdf <- "inst/workflow/graphics/chl_assess_10.pdf"
-  dolog = "x"
-  ras <- raster(file.path(datapath,"chl_raster.grd"))
-  ## not used
-  ## cell_tab <- read_feather(file.path(datapath, "chl_cell_tab.feather"))  
-  #%>% mutate(min = log(min), max = log(max), mean = log(mean))
+outpdf <- "inst/workflow/graphics/chl_assess_11.pdf"
+dolog = "x"
+ras <- raster(file.path(datapath,"chl_raster.grd"))
+
+if (FALSE) {
   summ_tab <- read_feather(file.path(datapath, "chl_summ_tab.feather")) 
-  #%>%  mutate(min = log(min), max = log(max))  ## no mean
-  
   raw_tab <-  read_feather(file.path(datapath, "chl_raw_tab.feather")) 
-  #%>%   mutate(min = log(min), max = log(max), mean = log(mean))
-  seclab <- 0.06
-  varlabel <- function(ttext) {
-    bquote(.(ttext)~ "CHL-a mg m-3") 
-  }
-  min_max <- c(0.01, 3)
-  usr <- c(0.000000001, 100, -5, 100)
 }
+
+seclab <- 0.06
+varlabel <- function(ttext) {
+  bquote(.(ttext)~ "CHL-a mg m-3") 
+}
+min_max <- c(0.01, 3)
+usr <- c(0.000000001, 100, -5, 100)
+
 
 
 total_areas <- aes_region@data %>% group_by(SectorName, Zone) %>% summarize(area_km2 = sum(area_km2))
@@ -42,7 +38,9 @@ total_areas$area_factor <- total_areas$area_km2 / c(Atlantic = 1.3, EastPacific 
 #total_areas$area_factor <- 3000000
 ## plot specifics
 lwdths <- c(6,4,2,1)
-lcols <- grey(seq(1, 0, length = nlevels(raw_tab$decade) + 2))[-c(1, 2)]
+alldecades <- c("1981-1990", "1990-1999","1999-2008", "2008-2016")
+#lcols <- grey(seq(1, 0, length = nlevels(raw_tab$decade) + 2))[-c(1, 2)]
+lcols <- grey(seq(1, 0, length = length(unique(alldecades)) + 2))[-c(1, 2)]
 den.range <- c(0, 2)
 dplot <- TRUE
 scaleval <- if (dolog == "x")  function(x) log(x) else function(x) x
@@ -62,7 +60,7 @@ for (seas in c( "Summer", "Winter")) {
       this_area <- subset(total_areas, Zone == zone & SectorName == sector)
       den.range <- c(0, this_area$area_km2/this_area$area_factor)
       titletext<- paste(seas, zone)
-      asub <- dplyr::filter(raw_tab, SectorName == sector & Zone == zone & Season == seas)
+      asub <- dplyr::filter(raw_tab, SectorName == sector & Zone == zone & Season == seas) %>% collect(n = Inf)
       if (nrow(asub) < 10) {
         dummyplot()
         dummyplot()
@@ -125,15 +123,16 @@ for (seas in c( "Summer", "Winter")) {
     mtext(side=1, varlabel(titletext) ,outer =T, line=1.5, cex=1)
     ## SPARKLINES
     for (sector in c("Atlantic",  "Indian", "EastPacific", "WestPacific")) {
-      asub <- subset(summ_tab, SectorName == sector & Zone == zone & Season == seas)
+     # asub <- subset(summ_tab, SectorName == sector & Zone == zone & Season == seas)
+      asub <- filter(summ_tab, SectorName == sector & Zone == zone & Season == seas) %>% collect()
       if (nrow(asub) < 10) {
         dummyplot()
         dummyplot()
         next; 
       } 
       
-      shouldersub <- subset(summ_tab, SectorName == sector & Zone == zone & Season == c(Summer = "Spring", Winter = "Autumn")[seas])
-      
+      #shouldersub <- subset(summ_tab, SectorName == sector & Zone == zone & Season == c(Summer = "Spring", Winter = "Autumn")[seas])
+      shouldersub <- filter(summ_tab, SectorName == sector & Zone == zone & Season == c(Summer = "Spring", Winter = "Autumn")[seas]) %>% collect()
       
       with(asub, {
         sparkline_yrange <- range(c(min, shouldersub$min))
