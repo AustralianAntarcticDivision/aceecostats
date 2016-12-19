@@ -1,4 +1,9 @@
-
+decade_maker <- function(x) {
+  #cut(as.integer(format(x, "%Y")), c(1980, 1992, 2004, 2016), lab = c("1980-1992", "1991-2004","2002-2016"))
+  cut(as.integer(format(x, "%Y")), c(1981, 1990, 1999, 2008, 2016), lab = c("1981-1990", "1990-1999","1999-2008", "2008-2016"))
+}
+aes_decades <- seq(as.POSIXct("1981-01-01"), length = 5, by = "9 years")
+devtools::use_data(aes_decades)
 
 library(raster)
 library(tibble)
@@ -87,6 +92,8 @@ aes_region$Shelf <- ifelse(aes_region$BathyClass == "Continent", "Shelf", "Ocean
 gridarea <- readRDS(file.path(outf,"nsidc_south_area.rds"))/1e6
 ## put a tidy end to the series
 maxdate <- ISOdatetime(2016, 9, 1, 0, 0, 0, tz = "GMT")
+#aes_maxdate <- maxdate
+#devtools::use_data(aes_maxdate)
 
 vars <- "seaice_duration" 
 ivar <- 1
