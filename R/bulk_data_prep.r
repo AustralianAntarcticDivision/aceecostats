@@ -1,3 +1,28 @@
+#' Convert a raster to a data frame. 
+#' 
+#' Create a data frame from a single layer [raster::RasterLayer()]. This is 
+#'
+#' @param x 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+tabit <- function(x, na.rm = TRUE) {
+  x <- tibble(val = values(x), cell_ = seq(ncell(x)))
+  if (na.rm ) {
+    x <- x %>% filter(!is.na(val))
+  }
+  x
+}
+
+
+decade_maker <- function(x) {
+  #cut(as.integer(format(x, "%Y")), c(1980, 1992, 2004, 2016), lab = c("1980-1992", "1991-2004","2002-2016"))
+  cut(as.integer(format(x, "%Y")), c(1981, 1990, 1999, 2008, 2016), lab = c("1981-1990", "1990-1999","1999-2008", "2008-2016"))
+}
+
+
 #' @importFrom raster readIniFile
 #' @importFrom tibble as_tibble
 read_ini <- function(inifile) {
