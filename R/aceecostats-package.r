@@ -92,3 +92,18 @@ NULL
 #' @aliases aes_region_ll aes_region_simple
 NULL
 
+#' The available remote sensing files at the time of bulk extraction. 
+#' 
+#' @name aes_files
+#' @aliases aes_chlfiles aes_sstfiles aes_icefiles
+NULL
+
+#' The key dates used for ACE ecostats assessment in the latest summary. 
+#' 
+#' \code{aes_maxdata} is the final date used for inclusion 
+#' \code{aes_decades} is the break points to defined periods
+#' 
+#' 
+#' @name aes_maxdate aes_decades
+NULL
+

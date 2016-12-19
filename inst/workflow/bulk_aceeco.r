@@ -8,7 +8,6 @@ library(aceecostats)
 ## custom data read functions
 library(raadtools)
 
-
 ## specify a working folder where all cached file outputs will go
 ## (plots all go into the working folder)
 outf <- "/mnt/acebulk"
@@ -21,13 +20,16 @@ oc <- bind_rows(sw %>% filter(date < min(md$date)), md) %>%   as_tibble()
 vr <- ocfiles(time.resolution = "monthly", product = "VIIRS", varname = "SNPP_CHL", type = "L3m", ext = "nc")
 
 ## this is all available days with VIIRS chosent over MODISA chosen over SeaWiFS
-oc <- bind_rows(oc %>% filter(date < min(vr$date)), vr)
+aes_chlfiles <- bind_rows(oc %>% filter(date < min(vr$date)), vr) %>% as_tibble()
+aes_icefiles <- icefiles() %>% as_tibble()
+aes_sstfiles <- sstfiles() %>% as_tibble()
+devtools::use_data(aes_chlfiles, aes_icefiles, aes_sstfiles)
 
 ## build bulk caches from the remote sensing file collections
 ## each .grd file output is every time step  for the study area available
-ice <- build_bulk_file(icefiles(), file.path(outf, "ice.grd"), read_i_ice, layer_prefix = "ice")
-sst <- build_bulk_file(sstfiles(), file.path(outf, "sst.grd"), read_i_sst, layer_prefix = "sst")
-chl <- build_bulk_file(oc, file.path(outf, "chl.grd"), read_i_chl, layer_prefix = "month_chl")
+ice <- build_bulk_file(aes_icefiles, file.path(outf, "ice.grd"), read_i_ice, layer_prefix = "ice")
+sst <- build_bulk_file(aes_sstfiles, file.path(outf, "sst.grd"), read_i_sst, layer_prefix = "sst")
+chl <- build_bulk_file(aes_chlfiles, file.path(outf, "chl.grd"), read_i_chl, layer_prefix = "month_chl")
 
 
 ## load previously calculated sea ice season metrics (seaiceson_southern_2016.Rmd)
