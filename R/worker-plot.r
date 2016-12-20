@@ -70,10 +70,22 @@ sector_colour <- function(secname) {
            c("Atlantic","Indian", "EastPacific","WestPacific"))[secname]
   
 }
+
+#' Sector name/label mapping
+#'
+#' @param secname short name
+#' @return the long names
+#' @export
 sector_name <- function(secname) {
   setNames(c("Atlantic","Indian","East\nPacific","West\nPacific"), 
            c("Atlantic","Indian", "EastPacific","WestPacific"))[secname]
 }
+
+#' Pick a decade
+#'
+#' @param n 
+#'
+#' @export
 decselect <- function(n) {
   stopifnot(length(n) == 1L)
   #c("1980-1992", "1991-2004","2002-2016")[n]
