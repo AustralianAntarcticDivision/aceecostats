@@ -33,18 +33,18 @@ library(raster)
 library(feather)
 ## local path to required cache files
 
-outf <- "/mnt/acebulk"
+datapath <- "/mnt/acebulk"
 
 ## domain and range for the sparkline (or use the range of the data)
 sparkline_domain <- ISOdatetime(c(1980, 2016), c(1, 11), 1, 0, 0, 0, tz = "GMT")
 #sparkline_range <- c(170, 350)
 
 outpdf <- "inst/workflow/graphics/ice_area_distribution002.pdf"
-ras <- raster(file.path(outf,"seaice_duration_raster.grd"))
+ras <- raster(file.path(datapath,"seaice_duration_raster.grd"))
 
 ## tables of cell data and summaries
-raw_tab <- read_feather(file.path(outf, "seaice_duration_raw_tab.feather"))
-summ_tab <- read_feather(file.path(outf, "seaice_duration_summ_tab.feather"))
+raw_tab <- read_feather(file.path(datapath, "seaice_duration_raw_tab.feather"))
+summ_tab <- read_feather(file.path(datapath, "seaice_duration_summ_tab.feather"))
 
 #' Generate variable label
 #'
@@ -62,20 +62,7 @@ varlabel <- function(ttext) {
 min_max <- c(0, 365)
 
 
-#' Worker function for histogram/density
-#'
-#' @param v measured values (e.g. ice season duration)
-#' @param w weight values (e.g. area of this cell)
-#'
-#' @return
-#' @export
-#'
-do_hist <- function(v, w = NULL) {
-  the.his <- hist(v, breaks=50, plot = FALSE)
-  multiplier <- (the.his$counts / the.his$density)[1]
-  the.den <- density(v, from=min(v), to=max(v), weights = w)
-  data.frame(x=the.den$x, y=the.den$y*multiplier)
-}
+
 
 
 ## aggregate the aes regions down for ice, just Sector and Shelf here
