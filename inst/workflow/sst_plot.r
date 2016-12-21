@@ -58,7 +58,7 @@ for (seas in c( "Summer", "Winter")) {
     for (sector in c("Atlantic",  "Indian", "EastPacific", "WestPacific")) {
       this_area <- subset(total_areas, Zone == zone & SectorName == sector)
       
-      den.range <- c(0, this_area$min_MAX/80)
+      den.range <- c(0, this_area$min_MAX/95)
       titletext<- paste(seas, zone)
       asub <- dplyr::filter(raw_tab, SectorName == sector & Zone == zone & Season == seas)
       if (nrow(asub) < 10) {
