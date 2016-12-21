@@ -104,7 +104,7 @@ for (shelf in c("Ocean", "Shelf")) {
     
     plot(min_max, den.range, type = "n", axes = FALSE, xlab = "", ylab = "")
     if (sector %in% c("Atlantic", "EastPacific")) mtext("km^2", side = 2)
-    text(30, den.range[2]*0.9, lab = sector_name(sector), cex=0.5)
+    text(320, den.range[2]*0.9, lab = sector_name(sector), cex=0.5)
     for (k in seq_along(lcols)) {
       vals_wgt <- asub %>% filter(decade == decselect(k)) %>% dplyr::select(dur, area)
       if (nrow(vals_wgt) < 1 | all(is.na(vals_wgt$dur))) next;
