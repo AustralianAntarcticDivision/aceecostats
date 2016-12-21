@@ -11,7 +11,7 @@ datapath <- "/mnt/acebulk"
 ## date range for the sparkline
 sparkline_domain <- aceecostats:::mk_sparkline_range()
 
-outpdf <- "inst/workflow/graphics/sst_area_distribution_001.pdf"
+outpdf <- "inst/workflow/graphics/sst_area_distribution_002.pdf"
 
 ras <- raster(file.path(datapath, "sst_raster.grd"))
 ## cell_tab <- read_feather(file.path(datapath, "sst_cell_tab.feather")) 
