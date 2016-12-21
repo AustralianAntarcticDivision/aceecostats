@@ -9,7 +9,7 @@ library(dplyr)
 datapath <- "/mnt/acebulk"
 
 ## date range for the sparkline
-sparkline_domain <- aceecostats:::mk_sparkline_range()
+sparkline_domain <- aceecostats:::mk_sparkline_domain()
 
 outpdf <- "inst/workflow/graphics/sst_area_distribution_002.pdf"
 
@@ -27,38 +27,51 @@ min_max <- c(-2, 30)
 usr <- c(-5, 100, -5, 6e9)
 dolog <- ""
 
-total_areas <- aes_region@data %>% group_by(SectorName, Zone) %>% summarize(area_km2 = sum(area_km2))
-#total_areas$area_factor <- total_areas$area_km2 / c(Atlantic = 1.3, EastPacific = 1.4, Indian = 1.6, WestPacific = 1.15)[total_areas$SectorName]
+total_areas <- aes_region@data %>% 
+  group_by(SectorName, Zone) %>% 
+  summarize(area_km2 = sum(area_km2))
 
-## pre-determine the actual maximum for each related sub-plot
+# cases <- total_areas %>% 
+#   inner_join(tibble(SectorName = rep(unique(total_areas$SectorName), each = 2), Season = rep(c("Summer", "Winter"), 4))) %>% 
+#   mutate(min_MAX = 0, max_MAX = 0, histMIN = vector("list"), histMAX = vector("list"))
+# 
+# for (i in seq(nrow(cases))) {
+#   asub <- raw_tab %>% dplyr::filter(SectorName == cases$SectorName[i] & Zone == cases$Zone[i] & Season == cases$Season[i])
+#   cases$histMIN[[i]] <- do_hist(asub$min, asub$area)
+#   cases$histMAX[[i]] <- do_hist(asub$max, asub$area)
+#   cases$min_MAX[i] <- max(cases$histMIN[[i]]$y)
+#   cases$max_MAX[i] <- max(cases$histMAX[[i]]$y)
+# }
+# cases <- cases %>% group_by(SectorName, Zone) %>% mutate(min_MAX = max(min_MAX), max_MAX = max(max_MAX))
+# total_areas$area_scale_factor <- 95
+
 total_areas$den_MAXmin <- total_areas$den_MAXmax <- numeric(nrow(total_areas))
 for (i in seq(nrow(total_areas))) {
   asub <- raw_tab %>% filter(SectorName == total_areas$SectorName[i], Zone == total_areas$Zone[i])
   total_areas$min_MAX[i] <- max(do_hist(asub$min, asub$area)$y)
   total_areas$max_MAX[i] <- max(do_hist(asub$max, asub$area)$y)
 }
-total_areas <- total_areas %>% group_by(SectorName) %>% mutate(min_MAX = max(min_MAX), max_MAX = max(max_MAX))
-
+total_areas <- total_areas %>% group_by(SectorName, Zone) %>% mutate(min_MAX = max(min_MAX), max_MAX = max(max_MAX))
+total_areas$area_scale_factor <- 95
 
 lwdths <- c(6,4,2,1)
-lcols <- grey(seq(1, 0, length = nlevels(raw_tab$decade) + 2))[-c(1, 2)]
-den.range <- c(0, 2)
+alldecades <- c("1981-1990", "1990-1999","1999-2008", "2008-2016")
+#lcols <- grey(seq(1, 0, length = nlevels(raw_tab$decade) + 2))[-c(1, 2)]
+lcols <- grey(seq(1, 0, length = length(unique(alldecades)) + 2))[-c(1, 2)]
+
 dplot <- TRUE
 seas <- "Summer"; zone <- "Polar"
 if (dplot) pdf(outpdf)
 for (seas in c( "Summer", "Winter")) {
   for (zone in c("Polar",  "Temperate")) {
     
-    #for (seas in "Spring") {
-    #  for (zone in "Polar") {
-    
     layout(layout_m())
     op <- par(mar=c(0,0,0,0), oma=c(2.5, 0.95, 0.5, 0.5), tcl=0.2, cex=1.25, mgp=c(3, 0.25, 0), cex.axis=0.75, col="gray40", col.axis="gray40", fg="gray40")
     ## DENSITY PLOTS
     for (sector in c("Atlantic",  "Indian", "EastPacific", "WestPacific")) {
-      this_area <- subset(total_areas, Zone == zone & SectorName == sector)
+      this_area <- dplyr::filter(total_areas, Zone == zone & SectorName == sector)
       
-      den.range <- c(0, this_area$min_MAX/95)
+      den.range <- c(0, this_area$min_MAX/this_area$area_scale_factor)
       titletext<- paste(seas, zone)
       asub <- dplyr::filter(raw_tab, SectorName == sector & Zone == zone & Season == seas)
       if (nrow(asub) < 10) {
@@ -104,15 +117,14 @@ for (seas in c( "Summer", "Winter")) {
     mtext(side=1, varlabel(titletext) ,outer =T, line=1.5, cex=1)
     ## SPARKLINES
     for (sector in c("Atlantic",  "Indian", "EastPacific", "WestPacific")) {
-      asub <- subset(summ_tab, SectorName == sector & Zone == zone & Season == seas)
+      asub <- dplyr::filter(summ_tab, SectorName == sector & Zone == zone & Season == seas)
       if (nrow(asub) < 10) {
         dummyplot()
         dummyplot()
         next; 
       } 
       
-#      shouldersub <- subset(summ_tab, SectorName == sector & Zone == zone & Season == c(Summer = "Spring", Winter = "Autumn")[seas])
-      shouldersub <- subset(summ_tab, SectorName == sector & Zone == zone & Season == c(Summer = "Autumn", Winter = "Spring")[seas])
+      shouldersub <- dplyr::filter(summ_tab, SectorName == sector & Zone == zone & Season == c(Summer = "Autumn", Winter = "Spring")[seas])
       sparkline_range <- range(c(asub$min, shouldersub$min))
       plot(sparkline_domain, sparkline_range, type = "n", axes = FALSE, xlab = "", ylab = "")
       segmentlines(cbind(asub$date, asub$min), col = lcols[asub$decade])

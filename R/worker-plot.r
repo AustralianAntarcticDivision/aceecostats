@@ -5,7 +5,7 @@
 #' @export
 #'
 #' @examples
-mk_sparkline_range <- function() ISOdatetime(c(1980, 2016), c(1, 11), 1, 0, 0, 0, tz = "GMT")
+mk_sparkline_domain <- function() ISOdatetime(c(1980, 2016), c(1, 11), 1, 0, 0, 0, tz = "GMT")
 
 #' Title
 #'

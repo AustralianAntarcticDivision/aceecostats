@@ -80,7 +80,10 @@ total_areas <- total_areas %>% group_by(SectorName) %>% mutate(den_MAX = max(den
 
 ## plot specifics
 lwdths <- c(6,4,2,1)
-lcols <- grey(seq(1, 0, length = nlevels(raw_tab$decade) + 2))[-c(1, 2)]
+#lcols <- grey(seq(1, 0, length = nlevels(raw_tab$decade) + 2))[-c(1, 2)]
+alldecades <- c("1981-1990", "1990-1999","1999-2008", "2008-2016")
+#lcols <- grey(seq(1, 0, length = nlevels(raw_tab$decade) + 2))[-c(1, 2)]
+lcols <- grey(seq(1, 0, length = length(unique(alldecades)) + 2))[-c(1, 2)]
 dplot <- TRUE
 if (dplot) pdf(outpdf)
 
