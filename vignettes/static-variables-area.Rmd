@@ -16,19 +16,19 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(aceecostats)
 library(sp)
-data(aes_region)
+
 
 ```
 
 ```{r}
-knitr::kable(as.data.frame(aes_region))
+knitr::kable(as.data.frame(aes_zone))
 ```
 
 ## Area
 
-There are `r nrow(aes_region)` regions classified by three different classifications, **BathyClass**, **SectorName**,  and **Zone**.
+There are `r nrow(aes_zone)` regions classified by   **SectorName**,  and **Zone**.
 
 ```{r}
-plot(aes_region, col = aes_region$colour)
-text(coordinates(aes_region), lab = aes_region$ID)
+plot(aes_zone, col = aes_zone$colour)
+text(coordinates(aes_zone), lab = aes_zone$ID)
 ```

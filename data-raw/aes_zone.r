@@ -22,6 +22,8 @@ aes_zone_ll$Zone <- unname(c(Temperate = "Mid-Latitude", Polar = "High-Latitude"
 aes_zone_ll$Zone[aes_zone_ll$Shelf == "Shelf"] <- "Continent"
 aes_zone_ll$Shelf <- NULL
 aes_zone_ll$colour <- aes_zone$colour
+aes_zone$ID <- seq(nrow(aes_zone))
+aes_zone_ll$ID <- seq(nrow(aes_zone_ll))
 
 devtools::use_data(aes_zone)
 devtools::use_data(aes_zone_ll)
