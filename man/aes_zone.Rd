@@ -9,8 +9,8 @@ Zones are four sectors (ocean basins Atlantic, Indian, East Pacific, West Pacifi
 and Continent (Antarctic-shelf)).
 }
 \examples{
-op <- par(mfrow = c(2, 1))
-plot(aes_zone_ll); text(coordinates(aes_zone_ll), lab = 1:12)
+op <- par(mfrow = c(2, 1), mar = c(0,0, 0,0))
+plot(aes_zone_ll, asp = 1.7); text(coordinates(aes_zone_ll), lab = 1:12)
 plot(aes_zone); text(coordinates(aes_zone), lab = 1:12)
 par(op)
 }
