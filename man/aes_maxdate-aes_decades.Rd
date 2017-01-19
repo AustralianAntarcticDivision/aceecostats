@@ -4,7 +4,7 @@
 \alias{aes_maxdate aes_decades}
 \title{The key dates used for ACE ecostats assessment in the latest summary.}
 \description{
-\code{aes_maxdata} is the final date used for inclusion 
+\code{aes_maxdata} is the final date used for inclusion
 \code{aes_decades} is the break points to defined periods
 }
 
