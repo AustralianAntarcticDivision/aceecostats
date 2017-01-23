@@ -19,8 +19,12 @@ library(feather)
 ## put a tidy end to the series
 maxdate <- ISOdatetime(2016, 12, 31, 23, 59, 59, tz = "GMT")
 
+aes_zone_data <- aes_zone@data[, c("ID", "SectorName", "Zone")]
+# ## here Continent just means High Latitude
+## we trick it here so the ID overlay gets bundled together below
+aes_zone_data$Zone[aes_zone_data$Zone == "Continent"] <- "High-Latitude"
 
-vars <- c("chl") #c("ice",  "sst", "chl")
+vars <- c("sst", "chl")
 for (ivar in seq_along(vars)) {
 
   obj <- brick(file.path(outf, sprintf("%s.grd", vars[ivar])))
@@ -61,14 +65,14 @@ for (ivar in seq_along(vars)) {
                       aes_zone)$ID
   
   ## summ_tab is the mean values over time
-  summ_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_zone@data[, c("ID", "SectorName", "Zone")])) %>% 
+  summ_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_zone_data)) %>% 
     mutate(Season = aes_season(date)) %>% 
     group_by(Season, Zone, decade, SectorName,  date) %>%
     summarize(min = mean(min), max = mean(max), count = mean(count)) %>% 
     ungroup()
   
   ## raw_tab is all the cell values for density plots
-  raw_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_zone@data[, c("ID", "SectorName", "Zone")])) %>% 
+  raw_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_zone_data)) %>% 
     mutate(Season = aes_season(date))
   
   write_feather(cell_tab,  file.path(outf, sprintf("%s_cell_tab.feather", vars[ivar])))
