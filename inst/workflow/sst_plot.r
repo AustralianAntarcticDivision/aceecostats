@@ -51,8 +51,6 @@ total_areas$area_max[8] <- 5e6
 
 
 lwdths <- c(6,4,2,1)
-alldecades <- c("1981-1990", "1990-1999","1999-2008", "2008-2016")
-#lcols <- grey(seq(1, 0, length = nlevels(raw_tab$decade) + 2))[-c(1, 2)]
 lcols <- grey(seq(1, 0, length = length(unique(alldecades)) + 2))[-c(1, 2)]
 
 dplot <- TRUE

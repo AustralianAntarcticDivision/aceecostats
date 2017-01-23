@@ -132,9 +132,20 @@ sector_name <- function(secname) {
 #' @export
 decselect <- function(n) {
   stopifnot(length(n) == 1L)
-  #c("1980-1992", "1991-2004","2002-2016")[n]
-  c("1981-1990", "1990-1999","1999-2008", "2008-2016")[n]
+  alldecades[n]
 }
+
+#' All decades, used for interval classification
+#' 
+#' See data-raw/
+#' @name alldecades
+#' @docType data
+#' 
+NULL
+
+
+
+
 
 #' Worker function for histogram/density
 #'
