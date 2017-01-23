@@ -32,15 +32,15 @@ sst <- build_bulk_file(aes_sstfiles, file.path(outf, "sst.grd"), read_i_sst, lay
 chl <- build_bulk_file(aes_chlfiles, file.path(outf, "chl.grd"), read_i_chl, layer_prefix = "month_chl")
 
 
-## load previously calculated sea ice season metrics (seaiceson_southern_2016.Rmd)
-library(raster)
-outf <- "/mnt/acebulk"
-ret <- readRDS(file.path(outf, "south_retreat.rds"))
-
-adv <- readRDS(file.path(outf,"south_advance.rds") )
-duration <- ret - adv
-## if retreat is equal to one, it didn't retreat
-duration[ret == 1] <- 365
-obj <- setZ(duration, ISOdatetime(1979:2015, 2, 15, 0, 0, 0, tz = "GMT"))
-
+# ## load previously calculated sea ice season metrics (seaiceson_southern_2016.Rmd)
+# library(raster)
+# outf <- "/mnt/acebulk"
+# ret <- readRDS(file.path(outf, "south_retreat.rds"))
+# 
+# adv <- readRDS(file.path(outf,"south_advance.rds") )
+# duration <- ret - adv
+# ## if retreat is equal to one, it didn't retreat
+# duration[ret == 1] <- 365
+# obj <- setZ(duration, ISOdatetime(1979:2015, 2, 15, 0, 0, 0, tz = "GMT"))
+# 
 

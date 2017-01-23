@@ -39,7 +39,7 @@ datapath <- "/mnt/acebulk"
 sparkline_domain <- ISOdatetime(c(1980, 2016), c(1, 11), 1, 0, 0, 0, tz = "GMT")
 #sparkline_range <- c(170, 350)
 
-outpdf <- "inst/workflow/graphics/ice_area_distribution002.pdf"
+outpdf <- "inst/workflow/graphics/ice_area_distribution003.pdf"
 ras <- raster(file.path(datapath,"seaice_duration_raster.grd"))
 
 ## tables of cell data and summaries
@@ -62,11 +62,8 @@ varlabel <- function(ttext) {
 min_max <- c(0, 365)
 
 
-
-
-
-## aggregate the aes regions down for ice, just Sector and Shelf here
-total_areas <- aes_region@data %>% group_by(SectorName, Shelf) %>% summarize(area_km2 = sum(area_km2))
+## aggregate the aes regions down for ice, just Sector here
+total_areas <- aes_zone@data %>% group_by(SectorName) %>% summarize(area_km2 = sum(area_km2))
 #total_areas$area_factor <- 1 / 500 #*c(Atlantic = 1.3, EastPacific = 1.4, Indian = 1.6, WestPacific = 1.15)[total_areas$SectorName]
 
 ## pre-determine the actual maximum for each related sub-plot
@@ -84,7 +81,7 @@ lwdths <- c(6,4,2,1)
 alldecades <- c("1981-1990", "1990-1999","1999-2008", "2008-2016")
 #lcols <- grey(seq(1, 0, length = nlevels(raw_tab$decade) + 2))[-c(1, 2)]
 lcols <- grey(seq(1, 0, length = length(unique(alldecades)) + 2))[-c(1, 2)]
-dplot <- TRUE
+dplot <- FALSE
 if (dplot) pdf(outpdf)
 
 seas <- ""
