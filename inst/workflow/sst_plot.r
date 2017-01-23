@@ -124,23 +124,21 @@ for (seas in c( "Summer", "Winter")) {
       next; 
     } 
     
+    ## get the shoulder season
     shouldersub <- dplyr::filter(summ_tab, SectorName == sector & Zone == zone & Season == c(Summer = "Autumn", Winter = "Spring")[seas])
     sparkline_range <- range(c(asub$min, shouldersub$min))
     plot(sparkline_domain, sparkline_range, type = "n", axes = FALSE, xlab = "", ylab = "")
     segmentlines(cbind(asub$date, asub$min), col = lcols[asub$decade])
-    abline(h = mean(asub$min))
-    textheadtail(asub$date, asub$min)
-    
     ## do the shoulder season
     segmentlines(cbind(shouldersub$date, shouldersub$min), col = lcols[shouldersub$decade], lty = 2)
+    abline(h = mean(asub$min))
+    textheadtail(asub$date, asub$min)
     
     sparkline_range <- range(c(asub$max, shouldersub$max))
     plot(sparkline_domain, sparkline_range, type = "n", axes = FALSE, xlab = "", ylab = "")
     segmentlines(cbind(asub$date, asub$max), col = lcols[asub$decade])
     abline(h = mean(asub$max))
     textheadtail(asub$date, asub$max)
-    
-    
     ## do the shoulder season
     segmentlines(cbind(shouldersub$date, shouldersub$max), col = lcols[shouldersub$decade], lty = 2)
     
