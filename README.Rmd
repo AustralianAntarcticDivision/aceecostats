@@ -23,6 +23,11 @@ Install the package
 devtools::install_github("AustralianAntarcticDivision/aceecostats")
 ```
 
+## Workflow
+
+This is in-progress, current map of the entire process is here: https://github.com/AustralianAntarcticDivision/aceecostats/issues/8
+
+
 ## Regions
 
 Get the regions. 

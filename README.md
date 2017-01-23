@@ -15,6 +15,11 @@ Install the package
 devtools::install_github("AustralianAntarcticDivision/aceecostats")
 ```
 
+Workflow
+--------
+
+This is in-progress, current map of the entire process is here: <https://github.com/AustralianAntarcticDivision/aceecostats/issues/8>
+
 Regions
 -------
 
@@ -68,20 +73,20 @@ The data is stored on the map object itself.
 knitr::kable(as.data.frame(aes_zone))
 ```
 
-| SectorName  | Zone          |   area\_km2| colour     |
-|:------------|:--------------|-----------:|:-----------|
-| Atlantic    | High-Latitude |  19855197.0| \#7CAE0099 |
-| Atlantic    | Continent     |   1084548.0| \#7CAE00FF |
-| Atlantic    | Mid-Latitude  |  15671351.4| \#7CAE004D |
-| EastPacific | High-Latitude |   3241353.4| \#C77CFF99 |
-| EastPacific | Continent     |    724857.5| \#C77CFFFF |
-| EastPacific | Mid-Latitude  |  10573933.0| \#C77CFF4D |
-| Indian      | High-Latitude |  11699156.9| \#00BFC499 |
-| Indian      | Continent     |    706453.8| \#00BFC4FF |
-| Indian      | Mid-Latitude  |  13068371.7| \#00BFC44D |
-| WestPacific | High-Latitude |   8136176.3| \#F8766D99 |
-| WestPacific | Continent     |    885409.0| \#F8766DFF |
-| WestPacific | Mid-Latitude  |  23025500.3| \#F8766D4D |
+| SectorName  | Zone          |   area\_km2| colour     |   ID|
+|:------------|:--------------|-----------:|:-----------|----:|
+| Atlantic    | High-Latitude |  19855197.0| \#7CAE0099 |    1|
+| Atlantic    | Continent     |   1084548.0| \#7CAE00FF |    2|
+| Atlantic    | Mid-Latitude  |  15671351.4| \#7CAE004D |    3|
+| EastPacific | High-Latitude |   3241353.4| \#C77CFF99 |    4|
+| EastPacific | Continent     |    724857.5| \#C77CFFFF |    5|
+| EastPacific | Mid-Latitude  |  10573933.0| \#C77CFF4D |    6|
+| Indian      | High-Latitude |  11699156.9| \#00BFC499 |    7|
+| Indian      | Continent     |    706453.8| \#00BFC4FF |    8|
+| Indian      | Mid-Latitude  |  13068371.7| \#00BFC44D |    9|
+| WestPacific | High-Latitude |   8136176.3| \#F8766D99 |   10|
+| WestPacific | Continent     |    885409.0| \#F8766DFF |   11|
+| WestPacific | Mid-Latitude  |  23025500.3| \#F8766D4D |   12|
 
 Prefer ggplot2?
 ---------------
