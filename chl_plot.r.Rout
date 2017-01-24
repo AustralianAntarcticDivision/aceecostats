@@ -1,0 +1,187 @@
+
+R version 3.3.2 (2016-10-31) -- "Sincere Pumpkin Patch"
+Copyright (C) 2016 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[Previously saved workspace restored]
+
+> 
+> ## preparation
+> library(aceecostats)
+> library(raster)
+Loading required package: sp
+> library(feather)
+> library(dplyr)
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:raster’:
+
+    intersect, select, union
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+> 
+> ## local path to required cache files
+> datapath <- "/mnt/acebulk"
+> 
+> ## date range for the sparkline
+> sparkline_domain <- mk_sparkline_domain()
+> 
+> 
+> outpdf <- "inst/workflow/graphics/chl_density001.pdf"
+> ras <- raster(file.path(datapath,"chl_raster.grd"))
+> 
+>  summ_tab <- read_feather(file.path(datapath, "chl_summ_tab.feather")) 
+>   raw_tab <-  read_feather(file.path(datapath, "chl_raw_tab.feather")) 
+> 
+> 
+> varlabel <- function(ttext) {
++   bquote(.(ttext)~ "CHL-a mg m-3") 
++ }
+> seclab <- 2.1
+> min_max <- c(0.01, 30)
+> usr <- c(0.000000001, 100, -5, 6e9)
+> dolog <- "x"
+> scaleval <- if (dolog == "x")  function(x) log(x) else function(x) x
+> unscaleval <- if(dolog == "x") function(x) exp(x) else function(x) x
+> 
+> 
+> 
+> 
+> lwdths <- c(6,4,2,1)
+> lcols <- grey(seq(1, 0, length = length(unique(alldecades)) + 2))[-c(1, 2)]
+> 
+> seas <- "Summer"; zone <- "High-Latitude"
+> op1 <- options(scipen = -1)
+> den.range <- c(0, 1.5)
+> dplot <- TRUE
+> if (dplot) pdf(outpdf)
+> for (seas in c( "Summer", "Winter")) {
++   for (zone in c("High-Latitude", "Mid-Latitude")) {
++     
++     layout(layout_m())
++     op <- par(mar=c(0,0,0,0), oma=c(2.5, 0.95, 0.5, 0.5), tcl=0.2, cex=1.25, mgp=c(3, 0.25, 0), cex.axis=0.75, col="gray40", col.axis="gray40", fg="gray40")
++     ## DENSITY PLOTS
++     for (sector in c("Atlantic",  "Indian", "EastPacific", "WestPacific")) {
++       #this_area <- dplyr::filter(total_areas, Zone == zone & SectorName == sector)
++       
++       #den.range <- c(0, this_area$area_max)
++       titletext<- paste(seas, zone)
++       asub <- dplyr::filter(raw_tab, SectorName == sector & Zone == zone & Season == seas)## %>% collect(n = Inf)
++       if (nrow(asub) < 10) {
++         dummyplot()
++         dummyplot()
++         next;
++       }
++       
++       plot(min_max, den.range, type = "n", axes = FALSE, xlab = "", ylab = "", log = dolog)
++       
++       polygon(expand.grid(x = usr[1:2], y = usr[3:4])[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
++       if (sector %in% c("Atlantic", "EastPacific")) mtext("density", side = 2)
++       for (k in seq_along(lcols)) {
++         vals_wgt <- asub %>% filter(decade == decselect(k)) %>% dplyr::select(min, area)
++         if (nrow(vals_wgt) < 1 | all(is.na(vals_wgt$min))) next;
++         #dens.df <- do_hist(scaleval(vals_wgt$min), w = vals_wgt$area)
++         dens.df <- aceecostats:::do_density(scaleval(vals_wgt$min), w = vals_wgt$area)
++         lines(unscaleval(dens.df$x), dens.df$y, col=lcols[k], lwd=lwdths[k])
++         
++       }
++      # axis(2, cex.axis = 0.5, las = 1, mgp = c(3, -1.95, 0))
++       axis(2, at = c(0.25, 0.5, 0.75, 1), cex.axis = 0.5, las = 1, mgp = c(3, -1, 0))
++       
++       box()
++       mtext(side=1, varlabel(titletext) ,outer =TRUE, line=1.5, cex=1)
++       
++      plot(min_max, den.range, type = "n", axes = FALSE, xlab = "", ylab = "", log = dolog)
++       polygon(expand.grid(x = usr[1:2], y = usr[3:4])[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
++       
++       if (grepl("Pacific", sector)) axis(1)
++       if (sector %in% c("Atlantic", "EastPacific")) mtext("density", side = 2)
++       text(seclab[1], den.range[2]*0.9, lab = sector_name(sector), cex=0.5)
++       
++       for (k in seq_along(lcols)) {
++         vals_wgt <- asub %>% filter(decade == decselect(k)) %>% dplyr::select(max, area)
++         if (nrow(vals_wgt) < 1 | all(is.na(vals_wgt$max))) next;
++         #dens.df <- do_hist(scaleval(vals_wgt$max), w = vals_wgt$area)
++         dens.df <- aceecostats:::do_density(scaleval(vals_wgt$max), w = vals_wgt$area)
++         lines(unscaleval(dens.df$x), dens.df$y, col=lcols[k], lwd=lwdths[k])
++       }
++      # axis(2, cex.axis = 0.5, las = 1, mgp = c(3, -1.95, 0))
++       box()
++       
++       mtext(side=1, varlabel(titletext) ,outer =TRUE, line=1.5, cex=1)
++       axis(2, at = c(0.25, 0.5, 0.75, 1), cex.axis = 0.5, las = 1, mgp = c(3, -1, 0))
++       
++       
++       
++       
++     }
++     mtext(side=1, varlabel(titletext) ,outer =T, line=1.5, cex=1)
++     
++     ## SPARKLINES
++     for (sector in c("Atlantic",  "Indian", "EastPacific", "WestPacific")) {
++       asub <- dplyr::filter(summ_tab, SectorName == sector & Zone == zone & Season == seas) %>% collect()
++       if (nrow(asub) < 10) {
++         dummyplot()
++         dummyplot()
++         next; 
++       } 
++       
++       shouldersub <- dplyr::filter(summ_tab, SectorName == sector & Zone == zone & Season == c(Summer = "Autumn", Winter = "Spring")[seas])
++       sparkline_range <- range(c(asub$min, shouldersub$min))
++       plot(sparkline_domain, sparkline_range, type = "n", axes = FALSE, xlab = "", ylab = "")
++       segmentlines(cbind(asub$date, asub$min), col = lcols[asub$decade])
++       abline(h = mean(asub$min))
++       textheadtail(asub$date, asub$min)
++       
++       ## do the shoulder season
++       segmentlines(cbind(shouldersub$date, shouldersub$min), col = lcols[shouldersub$decade], lty = 2)
++       
++       sparkline_range <- range(c(asub$max, shouldersub$max))
++       plot(sparkline_domain, sparkline_range, type = "n", axes = FALSE, xlab = "", ylab = "")
++       segmentlines(cbind(asub$date, asub$max), col = lcols[asub$decade])
++       abline(h = mean(asub$max))
++       textheadtail(asub$date, asub$max)
++       
++       
++       ## do the shoulder season
++       segmentlines(cbind(shouldersub$date, shouldersub$max), col = lcols[shouldersub$decade], lty = 2)
++       
++       
++     }
++     par(op)
++     
++   }}
+There were 50 or more warnings (use warnings() to see the first 50)
+> 
+> options(op1)
+> if (dplot) dev.off()
+null device 
+          1 
+> 
+> 
+> 
+> proc.time()
+   user  system elapsed 
+322.124 274.524 596.989 

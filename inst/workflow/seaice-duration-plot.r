@@ -39,7 +39,7 @@ datapath <- "/mnt/acebulk"
 sparkline_domain <- ISOdatetime(c(1980, 2016), c(1, 11), 1, 0, 0, 0, tz = "GMT")
 #sparkline_range <- c(170, 350)
 
-outpdf <- "inst/workflow/graphics/ice_area_distribution004.pdf"
+outpdf <- "inst/workflow/graphics/ice_duration_density001.pdf"
 ras <- raster(file.path(datapath,"seaice_duration_raster.grd"))
 
 ## tables of cell data and summaries

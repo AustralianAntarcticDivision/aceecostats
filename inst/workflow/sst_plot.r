@@ -11,7 +11,7 @@ datapath <- "/mnt/acebulk"
 ## date range for the sparkline
 sparkline_domain <- aceecostats:::mk_sparkline_domain()
 
-outpdf <- "inst/workflow/graphics/sst_area_distribution_003.pdf"
+outpdf <- "inst/workflow/graphics/sst_density001.pdf"
 
 ras <- raster(file.path(datapath, "sst_raster.grd"))
 ## cell_tab <- read_feather(file.path(datapath, "sst_cell_tab.feather")) 
@@ -35,13 +35,14 @@ dolog <- ""
 lwdths <- c(6,4,2,1)
 lcols <- grey(seq(1, 0, length = length(unique(alldecades)) + 2))[-c(1, 2)]
 
-dplot <- TRUE
+dplot <- T
 
 op1 <- options(scipen = -1)
 if (dplot) pdf(outpdf)
 den.range <- c(0, 1.5)
 seas <- "Summer"
 zone <- "High-Latitude"
+ll <- list()
 for (seas in c( "Summer", "Winter")) {
   for (zone in c("High-Latitude", "Mid-Latitude")) {
 
@@ -67,6 +68,7 @@ for (seas in c( "Summer", "Winter")) {
       if (nrow(vals_wgt) < 1 | all(is.na(vals_wgt$min))) next
       dens.df <- aceecostats:::do_density(vals_wgt$min, w = vals_wgt$area)
       lines(dens.df, col=lcols[k], lwd=lwdths[k])
+      
     }
     axis(2, at = c(0.25, 0.5, 0.75, 1), cex.axis = 0.5, las = 1, mgp = c(3, -1, 0))
     

@@ -12,7 +12,7 @@ datapath <- "/mnt/acebulk"
 sparkline_domain <- mk_sparkline_domain()
 
 
-outpdf <- "inst/workflow/graphics/chl_area_distribution_002.pdf"
+outpdf <- "inst/workflow/graphics/chl_density001.pdf"
 ras <- raster(file.path(datapath,"chl_raster.grd"))
 
  summ_tab <- read_feather(file.path(datapath, "chl_summ_tab.feather")) 
@@ -23,7 +23,7 @@ varlabel <- function(ttext) {
   bquote(.(ttext)~ "CHL-a mg m-3") 
 }
 seclab <- 2.1
-min_max <- c(0.01, 3)
+min_max <- c(0.01, 30)
 usr <- c(0.000000001, 100, -5, 6e9)
 dolog <- "x"
 scaleval <- if (dolog == "x")  function(x) log(x) else function(x) x
@@ -34,10 +34,11 @@ unscaleval <- if(dolog == "x") function(x) exp(x) else function(x) x
 
 lwdths <- c(6,4,2,1)
 lcols <- grey(seq(1, 0, length = length(unique(alldecades)) + 2))[-c(1, 2)]
-dplot <- TRUE
-seas <- "Summer"; zone <- "High_Latitude"
+
+seas <- "Summer"; zone <- "High-Latitude"
 op1 <- options(scipen = -1)
 den.range <- c(0, 1.5)
+dplot <- TRUE
 if (dplot) pdf(outpdf)
 for (seas in c( "Summer", "Winter")) {
   for (zone in c("High-Latitude", "Mid-Latitude")) {
@@ -79,18 +80,21 @@ for (seas in c( "Summer", "Winter")) {
       polygon(expand.grid(x = usr[1:2], y = usr[3:4])[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
       
       if (grepl("Pacific", sector)) axis(1)
-      if (sector %in% c("Atlantic", "EastPacific")) mtext("max (km^2)", side = 2)
+      if (sector %in% c("Atlantic", "EastPacific")) mtext("density", side = 2)
       text(seclab[1], den.range[2]*0.9, lab = sector_name(sector), cex=0.5)
       
       for (k in seq_along(lcols)) {
         vals_wgt <- asub %>% filter(decade == decselect(k)) %>% dplyr::select(max, area)
         if (nrow(vals_wgt) < 1 | all(is.na(vals_wgt$max))) next;
-        dens.df <- do_hist(scaleval(vals_wgt$max), w = vals_wgt$area)
+        #dens.df <- do_hist(scaleval(vals_wgt$max), w = vals_wgt$area)
+        dens.df <- aceecostats:::do_density(scaleval(vals_wgt$max), w = vals_wgt$area)
         lines(unscaleval(dens.df$x), dens.df$y, col=lcols[k], lwd=lwdths[k])
       }
      # axis(2, cex.axis = 0.5, las = 1, mgp = c(3, -1.95, 0))
       box()
+      
       mtext(side=1, varlabel(titletext) ,outer =TRUE, line=1.5, cex=1)
+      axis(2, at = c(0.25, 0.5, 0.75, 1), cex.axis = 0.5, las = 1, mgp = c(3, -1, 0))
       
       
       
