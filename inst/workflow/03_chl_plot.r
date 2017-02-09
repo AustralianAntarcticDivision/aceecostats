@@ -12,7 +12,7 @@ datapath <- "/mnt/acebulk"
 sparkline_domain <- mk_sparkline_domain()
 
 
-outpdf <- "inst/workflow/graphics/chl_density001.pdf"
+outpdf <- "inst/workflow/graphics/chl_density_commongrid001.pdf"
 ras <- raster(file.path(datapath,"chl_raster.grd"))
 
  summ_tab <- read_feather(file.path(datapath, "chl_summ_tab.feather")) 

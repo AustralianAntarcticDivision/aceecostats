@@ -6,54 +6,49 @@ decade_maker <- function(x) {
 aes_decades <- seq(as.POSIXct("1977-01-01"), length = 5, by = "10 years")
 devtools::use_data(aes_decades, overwrite = TRUE)
 
+## make a grid
+
+## use the ice grid
 
 library(raster)
-library(tibble)
-library(dplyr)
-outf <- "/mnt/acebulk"
 library(aceecostats)
+grid <- raster(extent(-3950000, 3950000, -3950000, 4350000), nrow =  332, ncol = 316, 
+               crs = "+proj=stere +lat_0=-90 +lat_ts=-70 +lon_0=0 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs")
+
 library(feather)
-#aes_region$index <- seq(nrow(aes_region))
-#aes_region$Shelf <- ifelse(aes_region$BathyClass == "Continent", "Shelf", "Ocean")
+library(sf)
+data("wrld_simpl", package= "maptools")
+m <- st_geometry(st_transform(st_as_sf(wrld_simpl), st_crs(projection(grid))))
+outf <- "/mnt/acebulk"
 
 ## put a tidy end to the series
 maxdate <- ISOdatetime(2016, 12, 31, 23, 59, 59, tz = "GMT")
-
 aes_zone_data <- aes_zone@data[, c("ID", "SectorName", "Zone")]
 # ## here Continent just means High Latitude
 ## we trick it here so the ID overlay gets bundled together below
 aes_zone_data$Zone[aes_zone_data$Zone == "Continent"] <- "High-Latitude"
 
-vars <- c("sst", "chl")
-for (ivar in seq_along(vars)) {
 
+vars <- c("sst", "chl")[1]
+for (ivar in seq_along(vars)) {
+  
   obj <- brick(file.path(outf, sprintf("%s.grd", vars[ivar])))
-  ras <- raster(obj)
   
-  gridarea <- area(ras)/1e6
-  ## unique integer from 0 to ~nrow(sf)/90 for each three month period
-  segs <- cumsum(c(0, abs(diff(unclass(factor(aes_season(getZ(obj))))))))
-  
-  cell_tab <- vector("list", length(unique(segs)))
-  dates <- as.POSIXct(getZ(obj))
-  
+  obj <- brick(file.path(outf, sprintf("%s.grd", vars[ivar])))
+  obj <- projectRaster(obj, grid, method = "bilinear")
+  obj <- setZ(obj, getZ(brick(file.path(outf, sprintf("%s.grd", vars[ivar])))))
+
   for (i in seq_along(cell_tab)) {
     asub <- which(segs == unique(segs)[i])
     a_obj <- setZ(readAll(subset(obj, asub)), dates[asub])
-    tab <- tabit(min(a_obj, na.rm = TRUE)) 
-    tab <- tab %>% rename(min = val) %>% mutate(date = dates[asub[1]]) 
-    #%>% 
-    #  filter(min > 0)
-    tab$max<- values(max(a_obj, na.rm = TRUE))[tab$cell_]
-    tab$mean <- values(mean(a_obj, na.rm = TRUE))[tab$cell_]
-    tab$count <- values(calc(a_obj > 0, sum, na.rm = TRUE))[tab$cell_]
-    cell_tab[[i]] <- tab
+    gridmax <- max(a_obj, na.rm = TRUE)
+    gridmean <- mean(a_obj, na.rm = TRUE)
+    gridcount <- calc(a_obj > 0, sum, na.rm = TRUE)
+   
     print(i)
     rm(tab, a_obj)
     gc()
   }
-  
-  ## now process the summaries down
   
   cell_tab <- bind_rows(cell_tab) %>% 
     mutate(decade = decade_maker(date)) %>% 
@@ -62,7 +57,8 @@ for (ivar in seq_along(vars)) {
   
   ucell <- distinct(cell_tab, cell_) %>% mutate(area = extract(gridarea, cell_))
   ucell$ID <- over(spTransform(xyFromCell(ras, ucell$cell_, spatial=TRUE), projection(aes_zone)), 
-                      aes_zone)$ID
+                   aes_zone)$ID
+  
   
   ## summ_tab is the mean values over time
   summ_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_zone_data)) %>% 
@@ -83,7 +79,3 @@ for (ivar in seq_along(vars)) {
   write_feather(raw_tab,  file.path(outf, sprintf("%s_raw_tab.feather", vars[ivar])))
   rm(raw_tab)
 }
-
-
-
-

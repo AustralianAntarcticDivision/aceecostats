@@ -11,7 +11,7 @@ datapath <- "/mnt/acebulk"
 ## date range for the sparkline
 sparkline_domain <- aceecostats:::mk_sparkline_domain()
 
-outpdf <- "inst/workflow/graphics/sst_density001.pdf"
+outpdf <- "inst/workflow/graphics/sst_density_commongrid001.pdf"
 
 ras <- raster(file.path(datapath, "sst_raster.grd"))
 ## cell_tab <- read_feather(file.path(datapath, "sst_cell_tab.feather")) 
@@ -59,14 +59,17 @@ for (seas in c( "Summer", "Winter")) {
       dummyplot()
       next;
     }
+    den.range <- c(0, (aes_zone@data %>% filter(SectorName == sector, Zone == zone))$area_km2/5)
     plot(min_max, den.range, type = "n", axes = FALSE, xlab = "", ylab = "")
+    axis(2)
     polygon(expand.grid(x = usr[1:2], y = usr[3:4])[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
-    if (sector %in% c("Atlantic", "EastPacific")) mtext("density", side = 2)
+    if (sector %in% c("Atlantic", "EastPacific")) mtext("area", side = 2)
     
     for (k in seq_along(lcols)) {
       vals_wgt <- asub %>% filter(decade == decselect(k)) %>% dplyr::select(min, area)
       if (nrow(vals_wgt) < 1 | all(is.na(vals_wgt$min))) next
-      dens.df <- aceecostats:::do_density(vals_wgt$min, w = vals_wgt$area)
+      dens.df <- aceecostats:::do_hist(vals_wgt$min, w = vals_wgt$area)
+      
       lines(dens.df, col=lcols[k], lwd=lwdths[k])
       
     }
@@ -75,11 +78,12 @@ for (seas in c( "Summer", "Winter")) {
     #axis(2, cex.axis = 0.5, las = 1, mgp = c(3, -1, 0))
     box()
     mtext(side=1, varlabel(titletext) ,outer =TRUE, line=1.5, cex=1)
-
+    den.range <- c(0, (aes_zone@data %>% filter(SectorName == sector, Zone == zone))$area_km2/5)
     plot(min_max, den.range, type = "n", axes = FALSE, xlab = "", ylab = , log = dolog)
+    axis(2)
     polygon(expand.grid(x = usr[1:2], y = usr[3:4])[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
     if (grepl("Pacific", sector)) axis(1)
-    if (sector %in% c("Atlantic", "EastPacific")) mtext("density", side = 2)
+    if (sector %in% c("Atlantic", "EastPacific")) mtext("area", side = 2)
     text(seclab[1], den.range[2]*0.9, lab = sector_name(sector), cex=0.5)
     
     for (k in seq_along(lcols)) {
