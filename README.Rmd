@@ -15,6 +15,16 @@ knitr::opts_chunk$set(echo = TRUE)
 )
 ```
 
+## Package formal documentation
+
+https://australianantarcticdivision.github.io/aceecostats/
+
+## Processing Workflow
+
+This is in-progress, current map of the entire process is here: https://github.com/AustralianAntarcticDivision/aceecostats/issues/8
+
+
+
 ## Install
 
 Install the package
@@ -22,10 +32,6 @@ Install the package
 ```{r,eval=FALSE}
 devtools::install_github("AustralianAntarcticDivision/aceecostats")
 ```
-
-## Workflow
-
-This is in-progress, current map of the entire process is here: https://github.com/AustralianAntarcticDivision/aceecostats/issues/8
 
 
 ## Regions
