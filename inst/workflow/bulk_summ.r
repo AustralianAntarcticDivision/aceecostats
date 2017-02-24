@@ -1,9 +1,11 @@
 decade_maker <- function(x) {
   #cut(as.integer(format(x, "%Y")), c(1980, 1992, 2004, 2016), lab = c("1980-1992", "1991-2004","2002-2016"))
-  cut(as.integer(format(x, "%Y")), c(1981, 1990, 1999, 2008, 2016), lab = c("1981-1990", "1990-1999","1999-2008", "2008-2016"))
+  cut(as.integer(format(x, "%Y")), c(1977, 1987, 1997, 2007, 2017), 
+                lab = c("1977-1987", "1987-1998","1998-2007", "2007-2017"))
 }
-aes_decades <- seq(as.POSIXct("1981-01-01"), length = 5, by = "9 years")
-devtools::use_data(aes_decades)
+aes_decades <- seq(as.POSIXct("1977-01-01"), length = 5, by = "10 years")
+devtools::use_data(aes_decades, overwrite = TRUE)
+
 
 library(raster)
 library(tibble)
@@ -11,11 +13,12 @@ library(dplyr)
 outf <- "/mnt/acebulk"
 library(aceecostats)
 library(feather)
-aes_region$index <- seq(nrow(aes_region))
-aes_region$Shelf <- ifelse(aes_region$BathyClass == "Continent", "Shelf", "Ocean")
+#aes_region$index <- seq(nrow(aes_region))
+#aes_region$Shelf <- ifelse(aes_region$BathyClass == "Continent", "Shelf", "Ocean")
 
 ## put a tidy end to the series
-maxdate <- ISOdatetime(2016, 9, 1, 0, 0, 0, tz = "GMT")
+maxdate <- ISOdatetime(2016, 12, 31, 23, 59, 59, tz = "GMT")
+
 
 
 vars <- c("ice", "sst", "chl")

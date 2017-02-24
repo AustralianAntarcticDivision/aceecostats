@@ -26,28 +26,28 @@ seclab <- 28
 min_max <- c(-2, 30)
 usr <- c(-5, 100, -5, 6e9)
 dolog <- ""
-
-total_areas <- aes_region@data %>% 
-  group_by(SectorName, Zone) %>% 
-  summarize(area_km2 = sum(area_km2))
-
-total_areas$area_max <- total_areas$area_km2
-## Atlantic/Polar
-total_areas$area_max[1] <- 3e6
-## Atlantic/Temperate
-total_areas$area_max[2] <- 3e6
-## EastPacific/Polar
-total_areas$area_max[3] <-  1e5
-## EastPacific/Temperate
-total_areas$area_max[4] <-  2e6
-## Indian/Polar
-total_areas$area_max[5] <- 2e6
-## Indian/Temperate
-total_areas$area_max[6] <- 2.5e6
-## WestPacific/Polar
-total_areas$area_max[7] <- 5e5
-## WestPacific/Temperate
-total_areas$area_max[8] <- 5e6
+# 
+# total_areas <- aes_region@data %>% 
+#   group_by(SectorName, Zone) %>% 
+#   summarize(area_km2 = sum(area_km2))
+# 
+# total_areas$area_max <- total_areas$area_km2
+# ## Atlantic/Polar
+# total_areas$area_max[1] <- 3e6
+# ## Atlantic/Temperate
+# total_areas$area_max[2] <- 3e6
+# ## EastPacific/Polar
+# total_areas$area_max[3] <-  1e5
+# ## EastPacific/Temperate
+# total_areas$area_max[4] <-  2e6
+# ## Indian/Polar
+# total_areas$area_max[5] <- 2e6
+# ## Indian/Temperate
+# total_areas$area_max[6] <- 2.5e6
+# ## WestPacific/Polar
+# total_areas$area_max[7] <- 5e5
+# ## WestPacific/Temperate
+# total_areas$area_max[8] <- 5e6
 
 
 lwdths <- c(6,4,2,1)
@@ -61,6 +61,7 @@ dplot <- TRUE
 #                              Zone = c("Polar", "Temperate"), 
 #                              scale_factor = 1, stringsAsFactors = FALSE)
 
+den.range <- c(0, 1)
 op1 <- options(scipen = -1)
 if (dplot) pdf(outpdf)
 for (seas in c( "Summer", "Winter")) {
@@ -70,8 +71,8 @@ for (seas in c( "Summer", "Winter")) {
   op <- par(mar=c(0,0,0,0), oma=c(2.5, 0.95, 0.5, 0.5), tcl=0.2, cex=1.25, mgp=c(3, 0.25, 0), cex.axis=0.75, col="gray40", col.axis="gray40", fg="gray40")
   ## DENSITY PLOTS
   for (sector in c("Atlantic",  "Indian", "EastPacific", "WestPacific")) {
-    this_area <- dplyr::filter(total_areas, Zone == zone & SectorName == sector)
-    den.range <- c(0, this_area$area_max)
+   # this_area <- dplyr::filter(total_areas, Zone == zone & SectorName == sector)
+   # den.range <- c(0, this_area$area_max)
     titletext<- paste(seas, zone)
     asub <- dplyr::filter(raw_tab, SectorName == sector & Zone == zone & Season == seas)
     if (nrow(asub) < 10) {
