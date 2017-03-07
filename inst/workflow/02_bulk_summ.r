@@ -3,22 +3,15 @@ decade_maker <- function(x) {
   cut(as.integer(format(x, "%Y")), c(1977, 1987, 1997, 2007, 2017), 
       lab = c("1977-1987", "1987-1998","1998-2007", "2007-2017"))
 }
-aes_decades <- seq(as.POSIXct("1977-01-01"), length = 5, by = "10 years")
-devtools::use_data(aes_decades, overwrite = TRUE)
-
-## make a grid
-
-## use the ice grid
+#aes_decades <- seq(as.POSIXct("1977-01-01"), length = 5, by = "10 years")
+#devtools::use_data(aes_decades, overwrite = TRUE)
 
 library(raster)
 library(aceecostats)
-grid <- raster(extent(-3950000, 3950000, -3950000, 4350000), nrow =  332, ncol = 316, 
-               crs = "+proj=stere +lat_0=-90 +lat_ts=-70 +lon_0=0 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs")
-
+library(tibble)
+library(dplyr)
 library(feather)
 library(sf)
-data("wrld_simpl", package= "maptools")
-m <- st_geometry(st_transform(st_as_sf(wrld_simpl), st_crs(projection(grid))))
 outf <- "/mnt/acebulk"
 
 ## put a tidy end to the series
@@ -29,19 +22,15 @@ aes_zone_data <- aes_zone@data[, c("ID", "SectorName", "Zone")]
 aes_zone_data$Zone[aes_zone_data$Zone == "Continent"] <- "High-Latitude"
 
 
-vars <- c("sst", "chl")[1]
+vars <- c("sst", "chl")
 for (ivar in seq_along(vars)) {
-  
+
   obj <- brick(file.path(outf, sprintf("%s.grd", vars[ivar])))
-  
-  obj <- brick(file.path(outf, sprintf("%s.grd", vars[ivar])))
-  obj <- projectRaster(obj, grid, method = "bilinear")
-  obj <- setZ(obj, getZ(brick(file.path(outf, sprintf("%s.grd", vars[ivar])))))
   ras <- raster(obj)
-  pp <- spex::qm_rasterToPolygons(ras)
-  pp <- st_transform(st_set_crs(pp, st_crs(projection(ras))), st_crs(proj4string(aes_zone)))
-  gridarea <- setValues(ras, st_area(pp))
-  #gridarea <- area(ras)/1e6
+#  pp <- spex::qm_rasterToPolygons(ras)
+#  pp <- st_transform(st_set_crs(pp, st_crs(projection(ras))), st_crs(proj4string(aes_zone)))
+#  gridarea <- setValues(ras, st_area(pp))
+  gridarea <- area(ras)
   ## this is now a known area from a non-equal grid
   
   ## unique integer from 0 to ~nrow(sf)/90 for each three month period

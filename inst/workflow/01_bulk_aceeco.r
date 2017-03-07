@@ -19,7 +19,7 @@ md <- ocfiles(time.resolution = "monthly", product = "MODISA", varname = "CHL", 
 oc <- bind_rows(sw %>% filter(date < min(md$date)), md) %>%   as_tibble()
 vr <- ocfiles(time.resolution = "monthly", product = "VIIRS", varname = "SNPP_CHL", type = "L3m", ext = "nc")
 
-## this is all available days with VIIRS chosent over MODISA chosen over SeaWiFS
+## this is all available days with VIIRS chosen over MODISA chosen over SeaWiFS
 aes_chlfiles <- bind_rows(oc %>% filter(date < min(vr$date)), vr) %>% as_tibble()
 aes_icefiles <- icefiles() %>% as_tibble()
 aes_sstfiles <- sstfiles() %>% as_tibble()
