@@ -86,14 +86,14 @@ useasons <- c("Summer", "Winter")
 ## this loop 10 summers in a decade
 
 alldays <- tibble(date = as.Date(getZ(obj)), decade = decade_maker(date), season = aes_season(date), 
-                  season_year = wrong_segs)
+                  season_year = segs)
 
 
 big_tab <- vector("list")
 icount <- 0
 library(purrr)
  for (idecade in seq_along(udecades)) {
-  for (iseason in seq_along(seasons)) {
+  for (iseason in seq_along(useasons)) {
     ## identify every day uniquely badged by season_year labels
     this_decade_days <- alldays %>% filter(decade == udecades[idecade], season == useasons[iseason])
     decade_years <- this_decade_days %>% split(.$season_year)
@@ -101,7 +101,7 @@ library(purrr)
     
     for (iyear in seq_along(list_of_seasons)) {
       yeardays <- decade_years[[iyear]]
-      a_obj <- readAll(subset(obj, which(wrong_segs %in% yeardays$season_year)))
+      a_obj <- readAll(subset(obj, which(segs %in% yeardays$season_year)))
       
       ## aggregate min/max for 90 days per cell
       minval_map <- min(a_obj, na.rm = TRUE)
@@ -110,7 +110,7 @@ library(purrr)
       
       ## all of the min/max grid values by region
       tab <- tabit(minval_map) 
-      tab <- tab %>% rename(min = val) %>% mutate(date = dates[asub[1]]) 
+      tab <- tab %>% rename(min = val) %>% mutate(date = yeardays$date[1]) 
       tab$max<- values(maxval_map)[tab$cell_]
       tab$count <- values(calc(!is.na(a_obj), sum, na.rm = TRUE))[tab$cell_]
       list_of_seasons[[iyear]] <- tab
@@ -129,11 +129,30 @@ library(purrr)
   }
  }
 big_tab <- bind_rows(big_tab)
-big_tab$area <- extract(gridarea, big_tab$cell_)
+big_tab$area <- raster::extract(gridarea, big_tab$cell_)
 
 big_tab <- big_tab %>% left_join(ucell %>% select(-area), "cell_") %>% inner_join(aes_zone_data) %>% select(-ID)
 saveRDS(big_tab, "decadal_tabs.rds", compress = "xz")
 
-file.copy(c("decadal_tabs.rds", "sparky_line.rds"), file.path("/tmp", c("decadal_tabs.rds", "sparky_line.rds")))
+file.copy(c("decadal_tabs.rds", "sparky_line.rds"), file.path(outf, c("decadal_tabs.rds", "sparky_line.rds")))
+
+library(ggplot2)
+library(tidyr)
+sp_line <- readRDS("sparky_line.rds")
+## we can chain this all into ggplot interactively
+## gather is a reshape so "measure" is key on "min" or "max", and "sst" is the value
+## we keep SectorName, Zone, season_year out of the reshape, and we filter/facet on them
+spark_data <- sp_line %>% filter(Zone == "High-Latitude", aes_season(season_year) == "Winter") %>% 
+  gather(measure, sst, -SectorName, -Zone, -season_year)
+  
+## the plot call is general, after we've reshaped and filterered above
+ggplot(spark_data, aes(x = season_year, y = sst, group = measure, colour = measure)) + geom_line() + facet_wrap(~SectorName+ Zone)
+
+
+big_tab <- readRDS("decadal_tabs.rds")
+density_data <- big_tab %>% filter(Zone == "Mid-Latitude", season == "Summer") 
+ggplot(density_data, aes(x = min, weights = area,  group = decade, colour = decade)) + 
+  geom_density() + facet_wrap(~SectorName+ Zone) 
+
 
 
