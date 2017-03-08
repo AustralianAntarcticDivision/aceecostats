@@ -129,8 +129,11 @@ library(purrr)
   }
  }
 big_tab <- bind_rows(big_tab)
-saveRDS(big_tab, "decadal_tabs.rds")
 big_tab$area <- extract(gridarea, big_tab$cell_)
 
+big_tab <- big_tab %>% left_join(ucell %>% select(-area), "cell_") %>% inner_join(aes_zone_data) %>% select(-ID)
+saveRDS(big_tab, "decadal_tabs.rds", compress = "xz")
 
 file.copy(c("decadal_tabs.rds", "sparky_line.rds"), file.path("/tmp", c("decadal_tabs.rds", "sparky_line.rds")))
+
+
