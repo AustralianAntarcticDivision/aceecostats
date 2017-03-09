@@ -22,35 +22,22 @@ library(dplyr)
 db <- src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
 epoch <- ISOdatetime(1970, 1, 1, 0, 0, 0, tz = "GMT")
 sst_density_tab <- tbl(db, "sst_density_tab") %>% collect(n = Inf)
-sst_sparkline_tab <- tbl(db, "sst_sparkline_tab") %>% collect(n = Inf) %>% mutate(season_year = season_year + epoch)
+sst_sparkline_tab <- tbl(db, "sst_sparkline_tab") %>% collect(n = Inf) %>% 
+  mutate(season_year = season_year + epoch, season = aes_season(season_year))
 
 
-## we can chain this all into ggplot interactively
-## gather is a reshape so "measure" is key on "min" or "max", and "sst" is the value
-## we keep SectorName, Zone, season_year out of the reshape, and we filter/facet on them
-spark_data <- sst_sparkline_tab %>% filter(Zone == "High-Latitude", aes_season(season_year) == "Winter") %>% 
-  gather(measure, sst, -SectorName, -Zone, -season_year)
-
-density_data <- sst_density_tab %>% filter(Zone == "Mid-Latitude", season == "Summer") 
-
-# ## the plot call is general, after we've reshaped and filterered above
-# ggplot(spark_data, aes(x = season_year, y = sst, group = measure, colour = measure)) + geom_line() + facet_wrap(~SectorName+ Zone)
-# ggplot(density_data, aes(x = min, weights = area,  group = decade, colour = decade)) + 
-#   geom_density() + facet_wrap(~SectorName+ Zone) 
-
-
-
+library(tidyr)
 
 ## loop the plots
-pdf("inst/workflow/graphics/sst_density_sparklines001.pdf")
+pdf("inst/workflow/graphics/sst_density_sparklines002.pdf")
 uzones <- unique(sst_density_tab$Zone)
 useasons <- c("Summer", "Winter")
 for (izone in seq_along(uzones)) {
   for (iseason in seq_along(useasons)) {
     
     ## reshape the sparkline data to key/col on min/max
-    spark_data <- sst_sparkline_tab %>% filter(Zone == uzones[izone], aes_season(season_year) == useasons[iseason]) %>% 
-      gather(measure, sst, -SectorName, -Zone, -season_year)
+    spark_data <- sst_sparkline_tab %>% filter(Zone == uzones[izone], season == useasons[iseason]) %>% 
+      gather(measure, sst, -season, -SectorName, -Zone, -season_year)
     
     ## subset the density data
     density_data <- sst_density_tab %>% filter(Zone == uzones[izone], season == useasons[iseason]) 
