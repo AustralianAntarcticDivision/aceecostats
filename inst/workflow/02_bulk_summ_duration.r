@@ -7,7 +7,7 @@ library(tibble)
 library(dplyr)
 
 library(aceecostats)
-library(feather)
+
 gridarea <- readRDS(file.path(outf,"nsidc_south_area.rds"))/1e6
 ## put a tidy end to the series
 maxdate <- ISOdatetime(2016, 9, 1, 0, 0, 0, tz = "GMT")
@@ -59,7 +59,7 @@ cell_tab <- bind_rows(listtab) %>%
   filter(date <  maxdate) %>% 
   filter(!is.na(decade))
 
-ucell <- distinct(cell_tab, cell_) %>% mutate(area = extract(gridarea, cell_))
+ucell <- distinct(cell_tab, cell_) %>% mutate(area = raster::extract(gridarea[[1]], cell_))
 ucell$ID <- over(spTransform(xyFromCell(ras, ucell$cell_, spatial=TRUE), projection(aes_zone)), 
                     aes_zone)$ID
 

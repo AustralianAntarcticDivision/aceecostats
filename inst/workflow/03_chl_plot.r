@@ -1,144 +1,60 @@
-
+decade_maker <- function(x) {
+  #cut(as.integer(format(x, "%Y")), c(1980, 1992, 2004, 2016), lab = c("1980-1992", "1991-2004","2002-2016"))
+  cut(as.integer(format(x, "%Y")), c(1977, 1987, 1997, 2007, 2017), 
+      lab = c("1977-1987", "1987-1998","1998-2007", "2007-2017"))
+}
 ## preparation
 library(aceecostats)
 library(raster)
 library(feather)
 library(dplyr)
-
+library(ggplot2)
 ## local path to required cache files
 datapath <- "/mnt/acebulk"
 
+library(ggplot2)
+library(tidyr)
 
-## date range for the sparkline
-sparkline_domain <- mk_sparkline_domain()
+##db file
+library(dplyr)
+db <- src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
+epoch <- ISOdatetime(1970, 1, 1, 0, 0, 0, tz = "GMT")
+
+## load everything from the two tables (parameterized filtering not working, otherwise we
+## could filter in the DB while plotting)
+chl_density_tab <- tbl(db, "chl_density_tab")  %>% 
+  collect(n = Inf)  %>% mutate(date = date + epoch)  %>%    rename(chl = val)
+chl_sparkline_tab <- tbl(db, "chl_sparkline_tab")  %>% 
+  collect(n = Inf) %>% 
+  mutate(season_year = season_year + epoch) %>% 
+  rename(chl = mean)
 
 
-outpdf <- "inst/workflow/graphics/chl_density_commongrid001.pdf"
-ras <- raster(file.path(datapath,"chl_raster.grd"))
+## loop the plots
+pdf("inst/workflow/graphics/chl_density_sparklines001.pdf")
+uzones <- unique(chl_density_tab$Zone)
+useasons <- c("Summer", "Winter")
+izone <- iseason <- 1
+for (izone in seq_along(uzones)) {
+  for (iseason in seq_along(useasons)) {
+    
+    ## subset the spark data
+    spark_data <- chl_sparkline_tab %>% filter(Zone == uzones[izone], season == useasons[iseason])  
+    
+    ## subset the density data
+    density_data <- chl_density_tab %>% filter(Zone == uzones[izone], season == useasons[iseason]) 
+    
+  ## create the three gg objects for sparkline, min-sst, max-sst
+   gspark <-  ggplot(spark_data, aes(x = season_year, y = chl)) + geom_line() + facet_wrap(~SectorName+ Zone)
+   gdens <- ggplot(density_data, aes(x = chl, weights = area,  group = decade, colour = decade)) + 
+      geom_density() + facet_wrap(~SectorName+ Zone) 
 
- summ_tab <- read_feather(file.path(datapath, "chl_summ_tab.feather")) 
-  raw_tab <-  read_feather(file.path(datapath, "chl_raw_tab.feather")) 
-
-
-varlabel <- function(ttext) {
-  bquote(.(ttext)~ "CHL-a mg m-3") 
+    ## linear for the spark line
+    print(gspark + ggtitle(sprintf("%s", useasons[iseason])) ) #+ scale_y_log10())
+    ## log for the density (alternatively set the xlim to much tighter)
+    print(gdens + ggtitle(sprintf("%s", useasons[iseason])) + scale_x_log10() + ylab("km2"))  ##  + xlim(c(0, 1)))
+    
+  
+  }
 }
-seclab <- 2.1
-min_max <- c(0.01, 30)
-usr <- c(0.000000001, 100, -5, 6e9)
-dolog <- "x"
-scaleval <- if (dolog == "x")  function(x) log(x) else function(x) x
-unscaleval <- if(dolog == "x") function(x) exp(x) else function(x) x
-
-
-
-
-lwdths <- c(6,4,2,1)
-lcols <- grey(seq(1, 0, length = length(unique(alldecades)) + 2))[-c(1, 2)]
-
-seas <- "Summer"; zone <- "High-Latitude"
-op1 <- options(scipen = -1)
-den.range <- c(0, 1.5)
-dplot <- TRUE
-if (dplot) pdf(outpdf)
-for (seas in c( "Summer", "Winter")) {
-  for (zone in c("High-Latitude", "Mid-Latitude")) {
-    
-    layout(layout_m())
-    op <- par(mar=c(0,0,0,0), oma=c(2.5, 0.95, 0.5, 0.5), tcl=0.2, cex=1.25, mgp=c(3, 0.25, 0), cex.axis=0.75, col="gray40", col.axis="gray40", fg="gray40")
-    ## DENSITY PLOTS
-    for (sector in c("Atlantic",  "Indian", "EastPacific", "WestPacific")) {
-      #this_area <- dplyr::filter(total_areas, Zone == zone & SectorName == sector)
-      
-      #den.range <- c(0, this_area$area_max)
-      titletext<- paste(seas, zone)
-      asub <- dplyr::filter(raw_tab, SectorName == sector & Zone == zone & Season == seas)## %>% collect(n = Inf)
-      if (nrow(asub) < 10) {
-        dummyplot()
-        dummyplot()
-        next;
-      }
-      
-      plot(min_max, den.range, type = "n", axes = FALSE, xlab = "", ylab = "", log = dolog)
-      
-      polygon(expand.grid(x = usr[1:2], y = usr[3:4])[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
-      if (sector %in% c("Atlantic", "EastPacific")) mtext("density", side = 2)
-      for (k in seq_along(lcols)) {
-        vals_wgt <- asub %>% filter(decade == decselect(k)) %>% dplyr::select(min, area)
-        if (nrow(vals_wgt) < 1 | all(is.na(vals_wgt$min))) next;
-        #dens.df <- do_hist(scaleval(vals_wgt$min), w = vals_wgt$area)
-        dens.df <- aceecostats:::do_density(scaleval(vals_wgt$min), w = vals_wgt$area)
-        lines(unscaleval(dens.df$x), dens.df$y, col=lcols[k], lwd=lwdths[k])
-        
-      }
-     # axis(2, cex.axis = 0.5, las = 1, mgp = c(3, -1.95, 0))
-      axis(2, at = c(0.25, 0.5, 0.75, 1), cex.axis = 0.5, las = 1, mgp = c(3, -1, 0))
-      
-      box()
-      mtext(side=1, varlabel(titletext) ,outer =TRUE, line=1.5, cex=1)
-      
-     plot(min_max, den.range, type = "n", axes = FALSE, xlab = "", ylab = "", log = dolog)
-      polygon(expand.grid(x = usr[1:2], y = usr[3:4])[c(1, 2, 4, 3), ], col = paste0(sector_colour(sector),40))
-      
-      if (grepl("Pacific", sector)) axis(1)
-      if (sector %in% c("Atlantic", "EastPacific")) mtext("density", side = 2)
-      text(seclab[1], den.range[2]*0.9, lab = sector_name(sector), cex=0.5)
-      
-      for (k in seq_along(lcols)) {
-        vals_wgt <- asub %>% filter(decade == decselect(k)) %>% dplyr::select(max, area)
-        if (nrow(vals_wgt) < 1 | all(is.na(vals_wgt$max))) next;
-        #dens.df <- do_hist(scaleval(vals_wgt$max), w = vals_wgt$area)
-        dens.df <- aceecostats:::do_density(scaleval(vals_wgt$max), w = vals_wgt$area)
-        lines(unscaleval(dens.df$x), dens.df$y, col=lcols[k], lwd=lwdths[k])
-      }
-     # axis(2, cex.axis = 0.5, las = 1, mgp = c(3, -1.95, 0))
-      box()
-      
-      mtext(side=1, varlabel(titletext) ,outer =TRUE, line=1.5, cex=1)
-      axis(2, at = c(0.25, 0.5, 0.75, 1), cex.axis = 0.5, las = 1, mgp = c(3, -1, 0))
-      
-      
-      
-      
-    }
-    mtext(side=1, varlabel(titletext) ,outer =T, line=1.5, cex=1)
-    
-    ## SPARKLINES
-    for (sector in c("Atlantic",  "Indian", "EastPacific", "WestPacific")) {
-      asub <- dplyr::filter(summ_tab, SectorName == sector & Zone == zone & Season == seas) %>% collect()
-      if (nrow(asub) < 10) {
-        dummyplot()
-        dummyplot()
-        next; 
-      } 
-      
-      shouldersub <- dplyr::filter(summ_tab, SectorName == sector & Zone == zone & Season == c(Summer = "Autumn", Winter = "Spring")[seas])
-      sparkline_range <- range(c(asub$min, shouldersub$min))
-      plot(sparkline_domain, sparkline_range, type = "n", axes = FALSE, xlab = "", ylab = "")
-      segmentlines(cbind(asub$date, asub$min), col = lcols[asub$decade])
-      abline(h = mean(asub$min))
-      textheadtail(asub$date, asub$min)
-      
-      ## do the shoulder season
-      segmentlines(cbind(shouldersub$date, shouldersub$min), col = lcols[shouldersub$decade], lty = 2)
-      
-      sparkline_range <- range(c(asub$max, shouldersub$max))
-      plot(sparkline_domain, sparkline_range, type = "n", axes = FALSE, xlab = "", ylab = "")
-      segmentlines(cbind(asub$date, asub$max), col = lcols[asub$decade])
-      abline(h = mean(asub$max))
-      textheadtail(asub$date, asub$max)
-      
-      
-      ## do the shoulder season
-      segmentlines(cbind(shouldersub$date, shouldersub$max), col = lcols[shouldersub$decade], lty = 2)
-      
-      
-    }
-    par(op)
-    
-  }}
-
-options(op1)
-if (dplot) dev.off()
-
-
+dev.off()
