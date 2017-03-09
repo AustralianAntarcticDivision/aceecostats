@@ -33,27 +33,29 @@ spark_data <- sst_sparkline_tab %>% filter(Zone == "High-Latitude", aes_season(s
 
 density_data <- sst_density_tab %>% filter(Zone == "Mid-Latitude", season == "Summer") 
 
-## the plot call is general, after we've reshaped and filterered above
-ggplot(spark_data, aes(x = season_year, y = sst, group = measure, colour = measure)) + geom_line() + facet_wrap(~SectorName+ Zone)
-ggplot(density_data, aes(x = min, weights = area,  group = decade, colour = decade)) + 
-  geom_density() + facet_wrap(~SectorName+ Zone) 
+# ## the plot call is general, after we've reshaped and filterered above
+# ggplot(spark_data, aes(x = season_year, y = sst, group = measure, colour = measure)) + geom_line() + facet_wrap(~SectorName+ Zone)
+# ggplot(density_data, aes(x = min, weights = area,  group = decade, colour = decade)) + 
+#   geom_density() + facet_wrap(~SectorName+ Zone) 
 
 
 
 
 ## loop the plots
-
+pdf("inst/workflow/graphics/sst_density_sparklines001.pdf")
 uzones <- unique(sst_density_tab$Zone)
 useasons <- c("Summer", "Winter")
 for (izone in seq_along(uzones)) {
   for (iseason in seq_along(useasons)) {
     
+    ## reshape the sparkline data to key/col on min/max
     spark_data <- sst_sparkline_tab %>% filter(Zone == uzones[izone], aes_season(season_year) == useasons[iseason]) %>% 
       gather(measure, sst, -SectorName, -Zone, -season_year)
     
+    ## subset the density data
     density_data <- sst_density_tab %>% filter(Zone == uzones[izone], season == useasons[iseason]) 
     
-    ## the plot call is general, after we've reshaped and filterered above
+  ## create the three gg objects for sparkline, min-sst, max-sst
    gspark <-  ggplot(spark_data, aes(x = season_year, y = sst, group = measure, colour = measure)) + geom_line() + facet_wrap(~SectorName+ Zone)
    gdens_min <- ggplot(density_data, aes(x = min, weights = area,  group = decade, colour = decade)) + 
       geom_density() + facet_wrap(~SectorName+ Zone) 
@@ -66,4 +68,4 @@ for (izone in seq_along(uzones)) {
     
   }
 }
-
+dev.off()
