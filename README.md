@@ -6,15 +6,10 @@ readme
 [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/AustralianAntarcticDivision/aceecostats?branch=master&svg=true)](https://ci.appveyor.com/project/AustralianAntarcticDivision/aceecostats)
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-Package formal documentation
-----------------------------
-
-<https://australianantarcticdivision.github.io/aceecostats/>
-
 Processing Workflow
 -------------------
 
-This is in-progress, current map of the entire process is here: <https://github.com/AustralianAntarcticDivision/aceecostats/issues/8>
+This is in-progress, current map of the entire process is here: <https://github.com/AustralianAntarcticDivision/aceecostats/issues/14>
 
 Install
 -------

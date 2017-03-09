@@ -15,4 +15,3 @@ Habitat region colours
 \examples{
 aes_zone_cols()
 }
-

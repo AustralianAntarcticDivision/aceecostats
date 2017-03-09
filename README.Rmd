@@ -15,14 +15,10 @@ knitr::opts_chunk$set(echo = TRUE)
 )
 ```
 
-## Package formal documentation
-
-https://australianantarcticdivision.github.io/aceecostats/
 
 ## Processing Workflow
 
-This is in-progress, current map of the entire process is here: https://github.com/AustralianAntarcticDivision/aceecostats/issues/8
-
+This is in-progress, current map of the entire process is here: https://github.com/AustralianAntarcticDivision/aceecostats/issues/14
 
 
 ## Install

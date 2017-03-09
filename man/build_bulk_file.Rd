@@ -26,4 +26,3 @@ The files collection must have columns `fullname` with the path to the file, and
 The function `read_i_raster` takes an integer and the files collection and returns the raster read from the i-th row.
 The date is set on the object after this function returns, to ensure it matches the database of files, and also so that the raster function can be used as a fallback.
 }
-

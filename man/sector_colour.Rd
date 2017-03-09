@@ -9,4 +9,3 @@ sector_colour(secname)
 \description{
 Title
 }
-

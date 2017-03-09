@@ -14,4 +14,3 @@ tabit(x, na.rm = TRUE)
 \description{
 Create a data frame from a single layer [raster::RasterLayer()]. This is
 }
-

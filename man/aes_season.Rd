@@ -18,4 +18,3 @@ Season classifying
 \examples{
 aes_season(Sys.Date())
 }
-

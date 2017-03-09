@@ -15,4 +15,3 @@ plot(aes_zone_ll, asp = 1.7); text(coordinates(aes_zone_ll), lab = 1:12)
 plot(aes_zone); text(coordinates(aes_zone), lab = 1:12)
 par(op)
 }
-

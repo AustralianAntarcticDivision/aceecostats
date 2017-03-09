@@ -14,4 +14,3 @@ do_hist(v, w = NULL)
 \description{
 Worker function for histogram/density
 }
-

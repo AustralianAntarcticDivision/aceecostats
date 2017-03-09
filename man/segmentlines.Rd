@@ -16,4 +16,3 @@ segmentlines(x, col, ...)
 \description{
 Title
 }
-

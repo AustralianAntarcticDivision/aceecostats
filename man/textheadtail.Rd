@@ -14,4 +14,3 @@ textheadtail(x, y)
 \description{
 Title
 }
-

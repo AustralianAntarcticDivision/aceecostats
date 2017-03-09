@@ -5,5 +5,7 @@
 ^README-.*\.png$
 ^\.travis\.yml$
 ^appveyor\.yml$
-^inst/working$
+^inst/workflow$
+^inst/old$
+^inst/aes_regions.html$
 ^docs/.*

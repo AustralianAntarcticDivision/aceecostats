@@ -7,4 +7,3 @@
 \code{aes_maxdata} is the final date used for inclusion
 \code{aes_decades} is the break points to defined periods
 }
-

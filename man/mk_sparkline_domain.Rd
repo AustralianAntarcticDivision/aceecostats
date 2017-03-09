@@ -9,4 +9,3 @@ mk_sparkline_domain()
 \description{
 Title
 }
-

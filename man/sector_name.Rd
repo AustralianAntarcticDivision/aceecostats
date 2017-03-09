@@ -15,4 +15,3 @@ the long names
 \description{
 Sector name/label mapping
 }
-

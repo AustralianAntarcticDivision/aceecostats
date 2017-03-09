@@ -9,4 +9,3 @@ dummyplot()
 \description{
 Title
 }
-

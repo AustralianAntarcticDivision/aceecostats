@@ -12,4 +12,3 @@ decselect(n)
 \description{
 Pick a decade
 }
-
