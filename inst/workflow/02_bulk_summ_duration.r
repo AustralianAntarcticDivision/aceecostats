@@ -7,6 +7,10 @@ library(tibble)
 library(dplyr)
 
 library(aceecostats)
+library(dplyr)
+
+outf <- "/mnt/acebulk"
+db <- dplyr::src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
 
 gridarea <- readRDS(file.path(outf,"nsidc_south_area.rds"))/1e6
 ## put a tidy end to the series
@@ -75,10 +79,12 @@ summ_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_zone@data[, c("ID",
 ## raw_tab is all the cell values for density plots
 raw_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_zone@data[, c("ID", "SectorName", "Zone")])) 
 
-
-write_feather(cell_tab,  file.path(outf, "seaice_duration_cell_tab.feather"))
-writeRaster(ras,        file.path(outf, "seaice_duration_raster.grd"))
-write_feather(summ_tab, file.path(outf, "seaice_duration_summ_tab.feather"))
-write_feather(raw_tab,  file.path(outf, "seaice_duration_raw_tab.feather"))
+raw_tab <- raw_tab %>% mutate(season = aes_season(date))
+copy_to(db, raw_tab, "ice_density_tab", temporary = FALSE)
+copy_to(db, summ_tab, "ice_sparkline_tab", temporary = FALSE)
+# write_feather(cell_tab,  file.path(outf, "seaice_duration_cell_tab.feather"))
+# writeRaster(ras,        file.path(outf, "seaice_duration_raster.grd"))
+# write_feather(summ_tab, file.path(outf, "seaice_duration_summ_tab.feather"))
+# write_feather(raw_tab,  file.path(outf, "seaice_duration_raw_tab.feather"))
 
 
