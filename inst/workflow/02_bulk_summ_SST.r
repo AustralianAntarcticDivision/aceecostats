@@ -13,7 +13,8 @@ library(dplyr)
 library(feather)
 library(sf)
 outf <- "/mnt/acebulk"
-
+#db <- dplyr::src_sqlite(file.path(outf, "habitat_assessment_output.sqlite3"), create = TRUE)
+db <- dplyr::src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
 ## put a tidy end to the series
 maxdate <- ISOdatetime(2016, 12, 31, 23, 59, 59, tz = "GMT")
 aes_zone_data <- aes_zone@data[, c("ID", "SectorName", "Zone")]
@@ -66,11 +67,9 @@ for (i in seq_along(sparkline_list)) {
   print(i)
 }  
 
-saveRDS(sp_line, "sparky_line.rds")
-sp_line <- readRDS("sparky_line.rds")
-library(ggplot2)
-ggplot(gather(sp_line, measure, sst, -SectorName, -Zone, -season_year) %>% 
-         filter(Zone == "High-Latitude", aes_season(season_year) == "Winter"), aes(x = season_year, y = sst, group = measure, colour = measure)) + geom_line() + facet_wrap(~SectorName+ Zone)
+sp_line <- bind_rows(sparkline_list)
+dplyr::copy_to(db, sp_line, "sst_sparkline_tab", temporary = FALSE)
+#saveRDS(sp_line, file.path(outf, "sparky_line.rds"))
 
 ## season_year needs a formalization above (using date)
 ## collection list to store summary tables per season-i
@@ -91,6 +90,9 @@ alldays <- tibble(date = as.Date(getZ(obj)), decade = decade_maker(date), season
 
 big_tab <- vector("list")
 icount <- 0
+idecade <- 1
+iseason <- 1
+iyear <- 1
 library(purrr)
  for (idecade in seq_along(udecades)) {
   for (iseason in seq_along(useasons)) {
@@ -113,6 +115,7 @@ library(purrr)
       tab <- tab %>% rename(min = val) %>% mutate(date = yeardays$date[1]) 
       tab$max<- values(maxval_map)[tab$cell_]
       tab$count <- values(calc(!is.na(a_obj), sum, na.rm = TRUE))[tab$cell_]
+
       list_of_seasons[[iyear]] <- tab
       print(iyear)
     }
@@ -132,27 +135,4 @@ big_tab <- bind_rows(big_tab)
 big_tab$area <- raster::extract(gridarea, big_tab$cell_)
 
 big_tab <- big_tab %>% left_join(ucell %>% select(-area), "cell_") %>% inner_join(aes_zone_data) %>% select(-ID)
-saveRDS(big_tab, "decadal_tabs.rds", compress = "xz")
-
-file.copy(c("decadal_tabs.rds", "sparky_line.rds"), file.path(outf, c("decadal_tabs.rds", "sparky_line.rds")))
-
-library(ggplot2)
-library(tidyr)
-sp_line <- readRDS("sparky_line.rds")
-## we can chain this all into ggplot interactively
-## gather is a reshape so "measure" is key on "min" or "max", and "sst" is the value
-## we keep SectorName, Zone, season_year out of the reshape, and we filter/facet on them
-spark_data <- sp_line %>% filter(Zone == "High-Latitude", aes_season(season_year) == "Winter") %>% 
-  gather(measure, sst, -SectorName, -Zone, -season_year)
-  
-## the plot call is general, after we've reshaped and filterered above
-ggplot(spark_data, aes(x = season_year, y = sst, group = measure, colour = measure)) + geom_line() + facet_wrap(~SectorName+ Zone)
-
-
-big_tab <- readRDS("decadal_tabs.rds")
-density_data <- big_tab %>% filter(Zone == "Mid-Latitude", season == "Summer") 
-ggplot(density_data, aes(x = min, weights = area,  group = decade, colour = decade)) + 
-  geom_density() + facet_wrap(~SectorName+ Zone) 
-
-
-
+copy_to(db, big_tab, "sst_density_tab", temporary = FALSE)
