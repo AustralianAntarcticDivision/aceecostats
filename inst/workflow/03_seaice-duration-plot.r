@@ -35,6 +35,17 @@ ice_sparkline_tab <- tbl(db, "ice_sparkline_tab") %>% collect(n = Inf) %>%
   group_by(Zone, SectorName, date, decade) %>% summarize(duration = mean(dur))
   #summarize(min = mean(min), max = mean(max))
 
+ice_sparkline_tab_nozone <- tbl(db, "ice_sparkline_tab_nozone") %>% collect(n = Inf) %>% 
+  mutate(date = date + epoch) %>% 
+  ## remove low-lat
+  #filter(!Zone == "Mid-Latitude") %>% 
+  #mutate(Zone = "High-Latitude")
+  
+  ## combine zones
+  group_by(SectorName, date, decade) %>% summarize(duration = mean(dur))
+#summarize(min = mean(min), max = mean(max))
+
+
 
 #library(tidyr)
 
@@ -62,4 +73,19 @@ for (izone in seq_along(uzones)) {
 
   }
 
+dev.off()
+
+
+
+
+pdf("inst/workflow/graphics/iceduration_density_sparklines_nozone001-draft.pdf")
+ spark_data <- ice_sparkline_tab_nozone
+ density_data <-  ice_density_tab %>%  rename(duration = dur) 
+  gspark <-  ggplot(spark_data, aes(x = date, y = duration)) + geom_line() + facet_wrap(~SectorName)
+  gdens <- ggplot(density_data, aes(x = duration, weights = area,  group = decade, colour = decade)) + 
+    geom_density() + facet_wrap(~SectorName)  
+  
+  print(gspark + ggtitle("Combined zones"))
+  print(gdens + ggtitle("Combined zones"))
+  
 dev.off()

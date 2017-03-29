@@ -62,9 +62,7 @@ decade_maker <- function(x) {
 cell_tab <- bind_rows(listtab) %>% 
   mutate(decade = decade_maker(date)) %>% 
   filter(date <  maxdate) %>% 
-  filter(!is.na(decade)) %>% 
-  filter(dur < 365)
-
+  filter(!is.na(decade))
 
 ucell <- distinct(cell_tab, cell_) %>% mutate(area = raster::extract(gridarea[[1]], cell_))
 ucell$ID <- over(spTransform(xyFromCell(ras, ucell$cell_, spatial=TRUE), projection(aes_zone)), 
@@ -78,17 +76,26 @@ summ_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_zone@data[, c("ID",
   summarize(dur = mean(dur)) %>% 
   ungroup()
 
+
+summ_tab_nozone <- cell_tab %>% inner_join(ucell %>% inner_join(aes_zone@data[, c("ID", "SectorName", "Zone")])) %>% 
+  #mutate(Season = aes_season(date)) %>% 
+  
+  group_by(decade, SectorName,  date) %>%
+  summarize(dur = mean(dur)) %>% 
+  ungroup()
+
 #cell_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_region@data[, c("index", "SectorName", "Zone", "Shelf")])) 
 
 ## raw_tab is all the cell values for density plots
 raw_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_zone@data[, c("ID", "SectorName", "Zone")])) 
 
 raw_tab <- raw_tab %>% mutate(season = aes_season(date))
-#db$con %>% db_drop_table(table='ice_density_tab')
-#db$con %>% db_drop_table(table='ice_sparkline_tab')
+db$con %>% db_drop_table(table='ice_density_tab')
+db$con %>% db_drop_table(table='ice_sparkline_tab')
 
 copy_to(db, raw_tab, "ice_density_tab", temporary = FALSE)
 copy_to(db, summ_tab, "ice_sparkline_tab", temporary = FALSE)
+copy_to(db, summ_tab_nozone, "ice_sparkline_tab_nozone", temporary = FALSE)
 # write_feather(cell_tab,  file.path(outf, "seaice_duration_cell_tab.feather"))
 # writeRaster(ras,        file.path(outf, "seaice_duration_raster.grd"))
 # write_feather(summ_tab, file.path(outf, "seaice_duration_summ_tab.feather"))
