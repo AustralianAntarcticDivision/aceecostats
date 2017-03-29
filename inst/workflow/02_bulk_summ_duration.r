@@ -45,7 +45,7 @@ for (i in seq_along(listtab)) {
   
   tab <- tabit(a_obj) %>% rename(dur = val) %>% mutate(date = dates[asub[1]])  
   #filter(dur > 0)
-  tab$dur[tab$dur < 30] <- 365
+  #tab$dur[tab$dur < 30] <- 365
   # tab$max<- values(max(a_obj))[tab$cell_]
   #  tab$mean <- values(mean(a_obj))[tab$cell_]
   listtab[[i]] <- tab
@@ -58,10 +58,13 @@ decade_maker <- function(x) {
   cut(as.integer(format(x, "%Y")), c(1977, 1987, 1997, 2007, 2017), 
       lab = c("1977-1987", "1987-1998","1998-2007", "2007-2017"))
 }
+
 cell_tab <- bind_rows(listtab) %>% 
   mutate(decade = decade_maker(date)) %>% 
   filter(date <  maxdate) %>% 
-  filter(!is.na(decade))
+  filter(!is.na(decade)) %>% 
+  filter(dur < 365)
+
 
 ucell <- distinct(cell_tab, cell_) %>% mutate(area = raster::extract(gridarea[[1]], cell_))
 ucell$ID <- over(spTransform(xyFromCell(ras, ucell$cell_, spatial=TRUE), projection(aes_zone)), 
@@ -70,8 +73,9 @@ ucell$ID <- over(spTransform(xyFromCell(ras, ucell$cell_, spatial=TRUE), project
 ## summ_tab is the mean values over time
 summ_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_zone@data[, c("ID", "SectorName", "Zone")])) %>% 
   #mutate(Season = aes_season(date)) %>% 
+
   group_by(Zone, decade, SectorName,  date) %>%
-  summarize(min = min(dur), max = max(dur), mean = mean(dur)) %>% 
+  summarize(dur = mean(dur)) %>% 
   ungroup()
 
 #cell_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_region@data[, c("index", "SectorName", "Zone", "Shelf")])) 
@@ -80,6 +84,9 @@ summ_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_zone@data[, c("ID",
 raw_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_zone@data[, c("ID", "SectorName", "Zone")])) 
 
 raw_tab <- raw_tab %>% mutate(season = aes_season(date))
+#db$con %>% db_drop_table(table='ice_density_tab')
+#db$con %>% db_drop_table(table='ice_sparkline_tab')
+
 copy_to(db, raw_tab, "ice_density_tab", temporary = FALSE)
 copy_to(db, summ_tab, "ice_sparkline_tab", temporary = FALSE)
 # write_feather(cell_tab,  file.path(outf, "seaice_duration_cell_tab.feather"))

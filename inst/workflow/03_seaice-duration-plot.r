@@ -1,145 +1,65 @@
-ice_duration_layout_m <- function() {
-  tx <- textConnection(
-    "1,1,5,5,5,5,5,1,3,3,7,7,7,7,7,3
-    1,1,5,5,5,5,5,1,3,3,7,7,7,7,7,3
-    1,1,5,5,5,5,5,1,3,3,7,7,7,7,7,3
-    1,1,5,5,5,5,5,1,3,3,7,7,7,7,7,3
-    1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
-    1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
-    1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
-    1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
-    1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
-    1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3
-    2,2,6,6,6,6,6,2,4,4,8,8,8,8,8,4
-    2,2,6,6,6,6,6,2,4,4,8,8,8,8,8,4
-    2,2,6,6,6,6,6,2,4,4,8,8,8,8,8,4
-    2,2,6,6,6,6,6,2,4,4,8,8,8,8,8,4
-    2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4
-    2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4
-    2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4
-    2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4
-    2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4
-    2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4")
-  as.matrix(read.csv(tx, header=F))
+decade_maker <- function(x) {
+  #cut(as.integer(format(x, "%Y")), c(1980, 1992, 2004, 2016), lab = c("1980-1992", "1991-2004","2002-2016"))
+  cut(as.integer(format(x, "%Y")), c(1977, 1987, 1997, 2007, 2017), 
+      lab = c("1977-1987", "1987-1998","1998-2007", "2007-2017"))
 }
-
-
-
 ## preparation
 library(aceecostats)
 library(raster)
-library(dplyr)
-library(raster)
 library(feather)
+library(dplyr)
+library(ggplot2)
 ## local path to required cache files
-
 datapath <- "/mnt/acebulk"
 
-## domain and range for the sparkline (or use the range of the data)
-sparkline_domain <- ISOdatetime(c(1980, 2016), c(1, 11), 1, 0, 0, 0, tz = "GMT")
-#sparkline_range <- c(170, 350)
-
-outpdf <- "inst/workflow/graphics/ice_duration_density001.pdf"
-ras <- raster(file.path(datapath,"seaice_duration_raster.grd"))
-
-## tables of cell data and summaries
-raw_tab <- read_feather(file.path(datapath, "seaice_duration_raw_tab.feather"))
-summ_tab <- read_feather(file.path(datapath, "seaice_duration_summ_tab.feather"))
-
-#' Generate variable label
-#'
-#' @param ttext 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-varlabel <- function(ttext) {
-  bquote(.(ttext)~ "ICE SEASON (days)") 
-}
-
-## range of the data for density plots
-min_max <- c(0, 365)
 
 
-## aggregate the aes regions down for ice, just Sector here
-total_areas <- aes_zone@data %>% group_by(SectorName) %>% summarize(area_km2 = sum(area_km2))
-#total_areas$area_factor <- 1 / 500 #*c(Atlantic = 1.3, EastPacific = 1.4, Indian = 1.6, WestPacific = 1.15)[total_areas$SectorName]
+library(ggplot2)
+library(tidyr)
 
-## pre-determine the actual maximum for each related sub-plot
-# total_areas$den_MAX <- numeric(nrow(total_areas))
-# for (i in seq(nrow(total_areas))) {
-#   asub <- raw_tab %>% filter(SectorName == total_areas$SectorName[i], Shelf == total_areas$Shelf[i])
-#   total_areas$den_MAX[i] <- max(do_hist(asub$dur, asub$area)$y)
-# }
-# total_areas <- total_areas %>% group_by(SectorName) %>% mutate(den_MAX = max(den_MAX))
+##db file
+library(dplyr)
+db <- src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
+epoch <- ISOdatetime(1970, 1, 1, 0, 0, 0, tz = "GMT")
+ice_density_tab <- tbl(db, "ice_density_tab") %>% collect(n = Inf) %>% mutate(date = date + epoch)  %>% 
+  filter(dur < 365) %>% 
+  filter(!Zone == "Mid-Latitude") 
+
+ice_sparkline_tab <- tbl(db, "ice_sparkline_tab") %>% collect(n = Inf) %>% 
+  mutate(date = date + epoch) %>% 
+  ## remove low-lat
+  filter(!Zone == "Mid-Latitude") %>% 
+  #mutate(Zone = "High-Latitude")
+
+  ## combine zones
+  group_by(Zone, SectorName, date, decade) %>% summarize(duration = mean(dur))
+  #summarize(min = mean(min), max = mean(max))
 
 
-## plot specifics
-lwdths <- c(6,4,2,1)
-#lcols <- grey(seq(1, 0, length = nlevels(raw_tab$decade) + 2))[-c(1, 2)]
+#library(tidyr)
 
-lcols <- grey(seq(1, 0, length = length(unique(alldecades)) + 2))[-c(1, 2)]
-dplot <- TRUE
-if (dplot) pdf(outpdf)
-
-seas <- ""
-zone <- "High-Latitude"
-#shelf <- "Ocean"
-sector <- "Atlantic"
-den.range <- c(0, 1.5)
-for (zone in c("High-Latitude", "Continent")) {
-  layout(ice_duration_layout_m())
-  op <- par(mar=c(0,0,0,0), oma=c(2.5, 0.95, 0.5, 0.5), tcl=0.2, cex=1.25, mgp=c(3, 0.25, 0), cex.axis=0.75, col="gray40", col.axis="gray40", fg="gray40")
-  ## DENSITY PLOTS
-  
-  for (sector in c("Atlantic",  "EastPacific", "Indian", "WestPacific")) {
-    #this_area <- subset(total_areas, Shelf == shelf & SectorName == sector)
-    #den.range <- c(0, this_area$den_MAX/10) 
-    #titletext<- paste("Polar", shelf)
-    titletext <- zone
-    asub <- subset(raw_tab, SectorName == sector & Zone == zone)
+## loop the plots
+pdf("inst/workflow/graphics/iceduration_density_sparklines001-draft.pdf")
+uzones <- unique(ice_density_tab$Zone)
+#useasons <- c("Summer", "Winter")
+for (izone in seq_along(uzones)) {
+#  for (iseason in seq_along(useasons)) {
     
-    plot(min_max, den.range, type = "n", axes = FALSE, xlab = "", ylab = "", yaxs = "i")
-    if (sector %in% c("Atlantic", "EastPacific")) mtext("density", side = 2)
-    text(320, den.range[2]*0.9, lab = sector_name(sector), cex=0.5)
-    for (k in seq_along(lcols)) {
-      vals_wgt <- asub %>% filter(decade == decselect(k)) %>% 
-        ## DROP the entire year ones
-        filter(dur < 365) %>% 
-        dplyr::select(dur, area)
-      if (nrow(vals_wgt) < 1 | all(is.na(vals_wgt$dur))) next;
-      #dens.df <- do_hist(vals_wgt$dur, w = vals_wgt$area)
-      dens.df <- aceecostats:::do_density(vals_wgt$dur, w = vals_wgt$area)
-      lines(dens.df, col=lcols[k], lwd=lwdths[k])
-      
-    }
-    
-    axis(2, at = c(0.25, 0.5, 0.75, 1), cex.axis = 0.5, las = 1, mgp = c(3, -1, 0))
-    
-    rect(par("usr")[1],par("usr")[3],par("usr")[2],par("usr")[4],
-         col = paste0(sector_colour(sector),40))
-    box()
-    mtext(side=1, varlabel(titletext) ,outer =T, line=1.5, cex=1)
-    if (sector %in% c("EastPacific", "WestPacific")) axis(1); 
-    # })
-    
+    # ## reshape the sparkline data to key/col on min/max
+     spark_data <- ice_sparkline_tab %>%  filter(Zone == uzones[izone])
+    # 
+    # ## subset the density data
+     density_data <- ice_density_tab %>% filter(Zone == uzones[izone]) %>% rename(duration = dur) 
+    # 
+    ## combine high lat and continent
+    gspark <-  ggplot(spark_data, aes(x = date, y = duration)) + geom_line() + facet_wrap(~SectorName)
+     
+    gdens <- ggplot(density_data, aes(x = duration, weights = area,  group = decade, colour = decade)) + 
+      geom_density() + facet_wrap(~SectorName)  
+ 
+    print(gspark + ggtitle(uzones[izone]))
+    print(gdens + ggtitle(uzones[izone]))
+
   }
-  
-  ## SPARKLINES
-  for (sector in c("Atlantic",  "EastPacific", "Indian", "WestPacific")) {
-    
-    asub <- dplyr::filter(summ_tab, SectorName == sector & Zone == zone) %>% select(date, mean, decade)
-    
-    plot(sparkline_domain, range(asub$mean) + c(-10, 10), type = "n", axes = FALSE, xlab = "", ylab = "")
-    segmentlines(cbind(asub$date, asub$mean), col = lcols[asub$decade])
-    abline(h = mean(asub$mean))
-    textheadtail(asub$date, round(asub$mean))
-  }
-  
-  par(op)
-  
-}
 
-if (dplot) dev.off()
-
+dev.off()
