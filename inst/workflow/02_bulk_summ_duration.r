@@ -10,6 +10,7 @@ library(aceecostats)
 library(dplyr)
 
 outf <- "/mnt/acebulk"
+dp <- file.path(outf, "seaiceseason")
 db <- dplyr::src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
 
 gridarea <- readRDS(file.path(outf,"nsidc_south_area.rds"))/1e6
@@ -18,13 +19,12 @@ maxdate <- ISOdatetime(2016, 9, 1, 0, 0, 0, tz = "GMT")
 ## load previously calculated sea ice season metrics (seaiceson_southern_2016.Rmd)
 library(raster)
 outf <- "/mnt/acebulk"
-ret <- readRDS(file.path(outf, "south_retreat.rds"))
-
-adv <- readRDS(file.path(outf,"south_advance.rds") )
+adv <- brick(file.path(dp, "south_advance.grd"))
+ret <- brick(file.path(dp, "south_retreat.grd"))
 duration <- ret - adv
 ## if retreat is equal to one, it didn't retreat
 duration[ret == 1] <- 365
-obj <- setZ(duration, ISOdatetime(1979:2015, 2, 15, 0, 0, 0, tz = "GMT"))
+obj <- setZ(duration, ISOdatetime(seq(1979, length = nlayers(adv)), 2, 15, 0, 0, 0, tz = "GMT"))
 rm(ret, adv)
 
 # 
