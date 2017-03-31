@@ -15,7 +15,7 @@ db <- dplyr::src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
 
 gridarea <- readRDS(file.path(outf,"nsidc_south_area.rds"))/1e6
 ## put a tidy end to the series
-maxdate <- ISOdatetime(2016, 9, 1, 0, 0, 0, tz = "GMT")
+maxdate <- ISOdatetime(2017, 9, 1, 0, 0, 0, tz = "GMT")
 ## load previously calculated sea ice season metrics (seaiceson_southern_2016.Rmd)
 library(raster)
 outf <- "/mnt/acebulk"
@@ -92,6 +92,7 @@ raw_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_zone@data[, c("ID", 
 raw_tab <- raw_tab %>% mutate(season = aes_season(date))
 db$con %>% db_drop_table(table='ice_density_tab')
 db$con %>% db_drop_table(table='ice_sparkline_tab')
+db$con %>% db_drop_table(table='ice_sparkline_tab_nozone')
 
 copy_to(db, raw_tab, "ice_density_tab", temporary = FALSE)
 copy_to(db, summ_tab, "ice_sparkline_tab", temporary = FALSE)

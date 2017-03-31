@@ -50,7 +50,7 @@ ice_sparkline_tab_nozone <- tbl(db, "ice_sparkline_tab_nozone") %>% collect(n = 
 #library(tidyr)
 
 ## loop the plots
-pdf("inst/workflow/graphics/iceduration_density_sparklines001-draft.pdf")
+pdf("inst/workflow/graphics/iceduration_density_sparklines002.pdf")
 uzones <- unique(ice_density_tab$Zone)
 #useasons <- c("Summer", "Winter")
 for (izone in seq_along(uzones)) {
@@ -78,7 +78,7 @@ dev.off()
 
 
 
-pdf("inst/workflow/graphics/iceduration_density_sparklines_nozone001-draft.pdf")
+pdf("inst/workflow/graphics/iceduration_density_sparklines_nozone002.pdf")
  spark_data <- ice_sparkline_tab_nozone
  density_data <-  ice_density_tab %>%  rename(duration = dur) 
   gspark <-  ggplot(spark_data, aes(x = date, y = duration)) + geom_line() + facet_wrap(~SectorName)
@@ -88,4 +88,52 @@ pdf("inst/workflow/graphics/iceduration_density_sparklines_nozone001-draft.pdf")
   print(gspark + ggtitle("Combined zones"))
   print(gdens + ggtitle("Combined zones"))
   
+dev.off()
+
+library(raster)
+
+adv <- brick(file.path(dp, "south_advance.grd"))
+ret <- brick(file.path(dp, "south_retreat.grd"))
+duration <- ret - adv
+## if retreat is equal to one, it didn't retreat
+duration[ret == 1] <- 365
+obj <- setZ(duration, ISOdatetime(seq(1979, length = nlayers(adv)), 2, 15, 0, 0, 0, tz = "GMT"))
+rm(ret, adv)
+
+decade <- decade_maker(getZ(obj))
+decade_maps <- vector("list", nlevels(decade))
+for (i in seq_along(decade_maps)) {
+  asub <- which(decade == levels(decade)[i])
+  dur <- calc(subset(duration, asub), max, na.rm = TRUE)
+  decade_maps[[i]] <- tabit(dur)
+}
+
+decade_maps <- bind_rows(decade_maps, .id = "decade") %>% 
+  rename(duration = val)
+decade_maps$decade <- levels(decade)[as.integer(decade_maps$decade)]
+library(ggplot2)
+decade_maps <- local({
+  xy <- xyFromCell(duration, decade_maps$cell_)
+  decade_maps$x <- xy[, 1]
+  decade_maps$y <- xy[, 2]
+  decade_maps
+})
+library(ggplot2)
+map <- fortify(subset(aes_zone, !Zone == "Mid-Latitude"))
+
+ggmaps <- ggplot(decade_maps, aes(x = x, y = y, fill = duration)) + 
+  geom_raster() + facet_wrap(~decade) + 
+  coord_equal() + 
+  scale_fill_gradientn(colours = palr::sstPal(200)[1:120]) + 
+  geom_path(data = map, aes(x = long, y = lat, group = group, fill = NULL)) + 
+  scale_x_continuous(labels = NULL) + 
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) + 
+  theme(axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+
+pdf("inst/workflow/graphics/iceduration_maps.pdf")
+print(ggmaps)
 dev.off()
