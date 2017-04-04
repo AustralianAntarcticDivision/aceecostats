@@ -16,6 +16,7 @@ datapath <- "/mnt/acebulk"
 
 library(ggplot2)
 library(tidyr)
+dp <- "/mnt/acebulk/seaiceseason"
 
 ##db file
 library(dplyr)
@@ -95,18 +96,24 @@ library(raster)
 adv <- brick(file.path(dp, "south_advance.grd"))
 ret <- brick(file.path(dp, "south_retreat.grd"))
 duration <- ret - adv
-## if retreat is equal to one, it didn't retreat
-duration[ret == 1] <- 365
+## if retreat is equal to or less than one, it didn't retreat
+duration[ret <= 1] <- 365
 obj <- setZ(duration, ISOdatetime(seq(1979, length = nlayers(adv)), 2, 15, 0, 0, 0, tz = "GMT"))
 rm(ret, adv)
 
 decade <- decade_maker(getZ(obj))
 decade_maps <- vector("list", nlevels(decade))
+ll_maps <- vector("list", nlevels(decade))
+
 for (i in seq_along(decade_maps)) {
   asub <- which(decade == levels(decade)[i])
-  dur <- calc(subset(duration, asub), max, na.rm = TRUE)
+  dur <- calc(subset(duration, asub), mean, na.rm = TRUE)
+  ll_maps[[i]] <- dur
+  
   decade_maps[[i]] <- tabit(dur)
+  
 }
+
 
 decade_maps <- bind_rows(decade_maps, .id = "decade") %>% 
   rename(duration = val)
@@ -114,6 +121,7 @@ decade_maps$decade <- levels(decade)[as.integer(decade_maps$decade)]
 library(ggplot2)
 decade_maps <- local({
   xy <- xyFromCell(duration, decade_maps$cell_)
+  #xy <- rgdal::project(xy, projection(duration), inv = TRUE)
   decade_maps$x <- xy[, 1]
   decade_maps$y <- xy[, 2]
   decade_maps
@@ -136,4 +144,24 @@ ggmaps <- ggplot(decade_maps, aes(x = x, y = y, fill = duration)) +
 
 pdf("inst/workflow/graphics/iceduration_maps.pdf")
 print(ggmaps)
+dev.off()
+
+
+## now convert to different maps
+
+llmap <- raster(extent(-180, 180, -85, -50), res = 0.1, crs = "+init=epsg:4326")
+#decade <- decade_maker(getZ(obj))
+
+
+ll_maps <- projectRaster(stack(ll_maps), llmap)
+
+pdf("inst/workflow/graphics/iceduration_maps_longlat.pdf")
+par(mar = rep(0, 4))
+
+plot(setNames(ll_maps, levels(decade)),
+     asp = NA, 
+     col = palr::sstPal(200)[1:120], nr = 4, 
+     addfun = function() plot(aes_zone_ll, add = TRUE), 
+     axes = FALSE)
+
 dev.off()

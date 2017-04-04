@@ -160,16 +160,16 @@ endate <- snaptodoy(max(allfiles$date), mon = hmon, mday = hmday -1, start = FAL
 bdates <- seq(startdate, endate, by = "1 year")
 
 for (iyear in seq_along(head(bdates, - 1))) {
-#yearn <- (ydates %>% filter(yearN == levels(yearN)[iyear]))$date
-yearn <- seq(bdates[iyear], bdates[iyear + 1], by = "1 day")
-tfilename <- file.path(dp, "yearfiles", 
-sprintf("%s_ice_%s_%s.grd", hemi, format(min(yearn), "%Y_%m_%d"), 
-format(max(yearn), "%Y_%m_%d")))
-print(iyear)
-if (!file.exists(tfilename)) {
-ice <- readIceBrick(yearn, hemisphere = hemi, interpolate = TRUE)
-writeRaster(ice, tfilename)
-}
+  #yearn <- (ydates %>% filter(yearN == levels(yearN)[iyear]))$date
+  yearn <- seq(bdates[iyear], bdates[iyear + 1], by = "1 day")
+  tfilename <- file.path(dp, "yearfiles", 
+                         sprintf("%s_ice_%s_%s.grd", hemi, format(min(yearn), "%Y_%m_%d"), 
+                                 format(max(yearn), "%Y_%m_%d")))
+  print(iyear)
+  if (!file.exists(tfilename)) {
+    ice <- readIceBrick(yearn, hemisphere = hemi, interpolate = TRUE)
+    writeRaster(ice, tfilename)
+  }
 }
 
 ```
