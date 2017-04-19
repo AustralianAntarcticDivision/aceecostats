@@ -204,16 +204,21 @@ files <- list.files(file.path(dp, "yearfiles"), full.names = TRUE, pattern = "^s
 
 advance <- vector("list", length(files))
 retreat <- vector("list", length(files))
+daycount <- vector("list", length(files))
+
 for (i in seq_along(files)) {
   ## obj contains 2 rasters "adv" and "ret"
   obj <- calc_ice_season(files[i])
   advance[[i]] <- obj$adv
   retreat[[i]] <- obj$ret
+  daycount[[i]] <- calc(readAll(brick(files[i])) > 15, mean, na.rm = TRUE) * 365
+  
 }
 
 
 advance <- brick(stack(advance), filename = file.path(dp, "south_advance.grd"))
 retreat <- brick(stack(retreat), filename = file.path(dp, "south_retreat.grd"))
+daycount <- brick(stack(daycount), filename = file.path(dp, "south_daycount.grd"))
   
 
 ```
