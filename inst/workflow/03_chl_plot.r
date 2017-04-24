@@ -1,3 +1,25 @@
+## use daily bin summaries DB
+library(dplyr)
+db <- src_sqlite("/mnt/acebulk/chlorophyll_assessment.sqlite3")
+dd <- bind_rows(tbl(db, "seawifs") %>% distinct(date) %>% collect(n = Inf), 
+                tbl(db, "modisa") %>% distinct(date) %>% collect(n = Inf)) %>% distinct(date) %>% arrange(date)
+
+
+
+dd$season <- aceecostats::aes_season(as.POSIXct(dd$date + as.Date("1970-01-01"), tz = "GMT"))
+dd$decade <- aceecostats:::decade_maker(as.POSIXct(dd$date + as.Date("1970-01-01"), tz = "GMT"))
+dd <- copy_to(db, dd)
+
+seas <- "Summer"
+dec <- "1999-2008"
+tempd <- dd %>% filter(season == seas, decade == dec) %>% 
+  inner_join(tbl(db, "modisa")) %>% select(chla_nasa) %>% collect(n = Inf)
+
+
+
+
+##################### original
+
 decade_maker <- function(x) {
   #cut(as.integer(format(x, "%Y")), c(1980, 1992, 2004, 2016), lab = c("1980-1992", "1991-2004","2002-2016"))
   cut(as.integer(format(x, "%Y")), c(1977, 1987, 1997, 2007, 2017), 
