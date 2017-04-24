@@ -54,17 +54,13 @@ for (i in seq_along(sparkline_list)) {
   
   
   ## aggregate min/max for 90 days per cell
-  minval_map <- calc(a_obj, min, na.rm = TRUE)
-  maxval_map <- calc(a_obj, max, na.rm = TRUE)
-  meanval_map <- calc(a_obj, mean, na.rm = TRUE)
-  #countval_map <- calc(a_obj >= 15, fun = sum, na.rm = TRUE)/nlayers(a_obj)
-  ## mean of the min/max by region
-  sparkys <-  tabit(maxval_map) %>% rename(maxval = val)%>% 
-    inner_join(tabit(minval_map) %>% rename(minval = val)) %>% 
-    inner_join(tabit(meanval_map) %>% rename(meanval = val)) %>% 
+  val_map <- calc(a_obj > 15, mean, na.rm = TRUE)
+  sparkys <-  tabit(val_map) %>% #rename(maxval = val)%>% 
+    #inner_join(tabit(minval_map) %>% rename(minval = val)) %>% 
+    #inner_join(tabit(meanval_map) %>% rename(meanval = val)) %>% 
     inner_join(ucell %>% inner_join(aes_zone_data)) %>% 
     group_by(SectorName, Zone) %>% 
-    summarize(minval = mean(minval), maxval = mean(maxval), meanval = mean(meanval)) %>% 
+    summarize(val = mean(val)) %>% 
     #summarize(meanmin = mean(minval), meanmax = mean(maxval)) %>% 
     mutate(season_year = dates[asub[1]])
   
@@ -73,9 +69,12 @@ for (i in seq_along(sparkline_list)) {
 }  
 
 sp_line <- bind_rows(sparkline_list)  %>% mutate(season = aes_season(season_year))
-db$con %>% db_drop_table(table='ice_minmaxmean_sparkline_tab')
+#db$con %>% db_drop_table(table='ice_minmaxmean_sparkline_tab')
 #dplyr::copy_to(db, sp_line, "ice_minmaxmean_sparkline_tab", temporary = FALSE)
 #saveRDS(sp_line, file.path(outf, "sparky_line.rds"))
+ggplot(sp_line %>% filter(Zone == "High-Latitude", season %in% c("Summer", "Winter")), 
+       aes(x  = season_year,  y = val, colour = season)) +
+  geom_line() + facet_wrap(~SectorName)
 
 ## season_year needs a formalization above (using date)
 ## collection list to store summary tables per season-i
