@@ -98,6 +98,7 @@ dummy_ini_path <- function(grid) {
 read_i_ice <- function(i, files) {
   raadtools::readice(files$date[i], inputfiles = files)
 }
+#' @export
 #' @rdname read-maps
 read_i_sst <- function(i, files) {
   ex <- extent(0, 360, -80, -30)

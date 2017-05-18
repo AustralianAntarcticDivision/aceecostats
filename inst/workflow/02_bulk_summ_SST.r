@@ -23,7 +23,8 @@ aes_zone_data <- aes_zone@data[, c("ID", "SectorName", "Zone")]
 aes_zone_data$Zone[aes_zone_data$Zone == "Continent"] <- "High-Latitude"
 
 
-obj <- brick(file.path(outf, sprintf("%s.grd", "sst")))
+obj <- brick(file.path(outf, "data", sprintf("%s.grd", "sst")))
+dates <- as.Date(getZ(obj), tz = "GMT")
 ras <- raster(obj)
 gridarea <- area(ras) * if (isLonLat(ras)) 1 else (1/1e6)
 
@@ -43,15 +44,14 @@ ucell$ID <- over(spTransform(xyFromCell(ras, ucell$cell_, spatial=TRUE), project
 
 ## main loop over all season-years
 sparkline_list <- vector("list", length(unique(segs)))
+tf <- sprintf("%s.grd", tempfile())
 ## loop over season-years
 for (i in seq_along(sparkline_list)) {
   asub <- which(segs == unique(segs)[i])
   a_obj <- setZ(readAll(subset(obj, asub)), dates[asub])
   
-  par(mfrow = c(2, 1), mar = rep(0, 4))
-  cols <- viridis::viridis(100)
-  
-  
+  #writeRaster(a_obj, tf, overwrite = TRUE)
+  #a_obj <- raster(tf)
   ## aggregate min/max for 90 days per cell
   minval_map <- min(a_obj, na.rm = TRUE)
   maxval_map <- max(a_obj, na.rm = TRUE)
@@ -65,6 +65,9 @@ for (i in seq_along(sparkline_list)) {
     mutate(season_year = dates[asub[1]])
   sparkline_list[[i]] <- sparkys
   print(i)
+  
+  rm(a_obj)
+  gc()
 }  
 
 sp_line <- bind_rows(sparkline_list)

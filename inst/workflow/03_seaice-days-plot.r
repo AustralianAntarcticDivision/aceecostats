@@ -21,10 +21,11 @@ dp <- "/mnt/acebulk/seaiceseason"
 ##db file
 library(dplyr)
 db <- src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
+
+
 epoch <- ISOdatetime(1970, 1, 1, 0, 0, 0, tz = "GMT")
 ice_density_tab <- tbl(db, "ice_days_density_tab") %>% collect(n = Inf) %>% mutate(date = date + epoch)  %>% 
-
-  filter(!Zone == "Mid-Latitude") 
+filter(!Zone == "Mid-Latitude") 
 
 ice_sparkline_tab <- tbl(db, "ice_days_sparkline_tab") %>% collect(n = Inf) %>% 
   mutate(date = date + epoch) 
@@ -34,7 +35,7 @@ ice_sparkline_tab_nozone <- tbl(db, "ice_days_sparkline_tab_nozone") %>% collect
 
 
 
-pdf("inst/workflow/graphics/icedays_sparklines_nozone001.pdf")
+pdf("inst/workflow/graphics/icedays_001.pdf")
  spark_data <- ice_sparkline_tab_nozone
  density_data <-  ice_density_tab %>% filter(days > 0, days < 365)
   gspark <-  ggplot(spark_data, aes(x = date, y = days)) + geom_line() + facet_wrap(~SectorName)
@@ -45,3 +46,13 @@ pdf("inst/workflow/graphics/icedays_sparklines_nozone001.pdf")
   print(gdens + ggtitle("Combined zones"))
   
 dev.off()
+
+
+# spark_data <- ice_sparkline_tab
+# density_data <-  ice_density_tab %>% filter(days > 0, days < 365)
+# gspark <-  ggplot(spark_data, aes(x = date, y = days)) + geom_line() + facet_wrap(~SectorName+Zone)
+# gdens <- ggplot(density_data, aes(x = days, weights = area,  group = decade, colour = decade)) + 
+#   geom_density() + facet_grid(SectorName~Zone)  
+# 
+# print(gspark + ggtitle(" zones"))
+# print(gdens + ggtitle("zones"))

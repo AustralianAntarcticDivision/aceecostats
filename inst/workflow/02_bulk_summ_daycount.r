@@ -51,7 +51,7 @@ cell_tab <- bind_rows(listtab) %>%
   filter(!is.na(decade))
 
 ucell <- distinct(cell_tab, cell_) %>% mutate(area = raster::extract(gridarea[[1]], cell_))
-ucell$ID <- over(spTransform(xyFromCell(ras, ucell$cell_, spatial=TRUE), projection(aes_zone)), 
+ucell$ID <- over(spTransform(xyFromCell(gridarea, ucell$cell_, spatial=TRUE), projection(aes_zone)), 
                     aes_zone)$ID
 
 ## summ_tab is the mean values over time

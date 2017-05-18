@@ -1,0 +1,91 @@
+
+R version 3.4.0 (2017-04-21) -- "You Stupid Darkness"
+Copyright (C) 2017 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> ## required extension packages
+> ## tibble and dplyr for data frame manipulation
+> library(tibble)
+> library(dplyr)
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+> 
+> ## custom functions for this study
+> library(aceecostats)
+> ## custom data read functions
+> library(raadtools)
+Loading required package: raster
+Loading required package: sp
+
+Attaching package: ‘raster’
+
+The following object is masked from ‘package:dplyr’:
+
+    select
+
+> 
+> ## specify a working folder where all cached file outputs will go
+> ## (plots all go into the working folder)
+> outf <- "/mnt/acebulk/data"
+> 
+> ## build up file collection specially for chlorophyll-a
+> ## SeaWiFS, then MODISA, then VIIRS
+> #sw <- ocfiles(time.resolution = "monthly", product = "SeaWiFS", varname = "CHL", type = "L3m", ext = "nc")
+> #md <- ocfiles(time.resolution = "monthly", product = "MODISA", varname = "CHL", type = "L3m", ext = "nc")
+> #oc <- bind_rows(sw %>% filter(date < min(md$date)), md) %>%   as_tibble()
+> #vr <- ocfiles(time.resolution = "monthly", product = "VIIRS", varname = "SNPP_CHL", type = "L3m", ext = "nc")
+> 
+> ## this is all available days with VIIRS chosen over MODISA chosen over SeaWiFS
+> #aes_chlfiles <- bind_rows(oc %>% filter(date < min(vr$date)), vr) %>% as_tibble()
+> aes_icefiles <- icefiles() %>% as_tibble()
+> aes_sstfiles <- sstfiles() %>% as_tibble()
+> devtools::use_data(aes_icefiles, aes_sstfiles, overwrite = TRUE)
+Saving aes_icefiles, aes_sstfiles as aes_icefiles.rda, aes_sstfiles.rda to /home/mdsumner/Git/aceecostats/data
+> 
+> ## build bulk caches from the remote sensing file collections
+> ## each .grd file output is every time step  for the study area available
+> #ice <- build_bulk_file(aes_icefiles, file.path(outf, "ice.grd"), read_i_ice, layer_prefix = "ice")
+> sst <- build_bulk_file(aes_sstfiles, file.path(outf, "sst.grd"), read_i_sst, layer_prefix = "sst")
+Loading required namespace: ncdf4
+> #chl <- build_bulk_file(aes_chlfiles, file.path(outf, "chl.grd"), read_i_chl, layer_prefix = "month_chl")
+> 
+> 
+> # ## load previously calculated sea ice season metrics (seaiceson_southern_2016.Rmd)
+> # library(raster)
+> # outf <- "/mnt/acebulk"
+> # ret <- readRDS(file.path(outf, "south_retreat.rds"))
+> # 
+> # adv <- readRDS(file.path(outf,"south_advance.rds") )
+> # duration <- ret - adv
+> # ## if retreat is equal to one, it didn't retreat
+> # duration[ret == 1] <- 365
+> # obj <- setZ(duration, ISOdatetime(1979:2015, 2, 15, 0, 0, 0, tz = "GMT"))
+> # 
+> 
+> 
+> proc.time()
+    user   system  elapsed 
+4070.439  245.215 4856.919 
