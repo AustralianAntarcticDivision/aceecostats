@@ -31,7 +31,7 @@ devtools::use_data(aes_icefiles, aes_sstfiles, overwrite = TRUE)
 ice <- build_bulk_file(aes_icefiles, file.path(outf, "ice.grd"), read_i_ice, layer_prefix = "ice")
 
 ## takes about 4856 seconds
-#sst <- build_bulk_file(aes_sstfiles, file.path(outf, "sst.grd"), read_i_sst, layer_prefix = "sst")
+sst <- build_bulk_file(aes_sstfiles, file.path(outf, "sst.grd"), read_i_sst, layer_prefix = "sst")
 #chl <- build_bulk_file(aes_chlfiles, file.path(outf, "chl.grd"), read_i_chl, layer_prefix = "month_chl")
 
 

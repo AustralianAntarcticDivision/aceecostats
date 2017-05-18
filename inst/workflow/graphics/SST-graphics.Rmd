@@ -1,3 +1,17 @@
+---
+title: "SST - assessment"
+author: "Michael Sumner, Jessica Melbourne-Thomas, Rowan Trebilco"
+date: "2017-5-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## SST
+
+```{r}
 decade_maker <- function(x) {
   #cut(as.integer(format(x, "%Y")), c(1980, 1992, 2004, 2016), lab = c("1980-1992", "1991-2004","2002-2016"))
   cut(as.integer(format(x, "%Y")), c(1977, 1987, 1997, 2007, 2017), 
@@ -29,9 +43,10 @@ sst_sparkline_tab <- tbl(db, "sst_sparkline_tab") %>% collect(n = Inf) %>%
 library(tidyr)
 
 ## loop the plots
-pdf("inst/workflow/graphics/sst_density_sparklines002.pdf")
+
 uzones <- unique(sst_density_tab$Zone)
 useasons <- c("Summer", "Winter")
+iseason <- izone <- 1 
 for (izone in seq_along(uzones)) {
   for (iseason in seq_along(useasons)) {
     
@@ -43,16 +58,19 @@ for (izone in seq_along(uzones)) {
     density_data <- sst_density_tab %>% filter(Zone == uzones[izone], season == useasons[iseason]) 
     
   ## create the three gg objects for sparkline, min-sst, max-sst
-   gspark <-  ggplot(spark_data, aes(x = season_year, y = sst, group = measure, colour = measure)) + geom_line() + facet_wrap(~SectorName+ Zone)
+   gspark <-  ggplot(spark_data, aes(x = season_year, y = sst, group = measure, colour = measure)) + geom_line() + facet_wrap(~SectorName)
    gdens_min <- ggplot(density_data, aes(x = min, weights = area,  group = decade, colour = decade)) + 
       geom_density() + facet_wrap(~SectorName+ Zone) 
    gdens_max <- ggplot(density_data, aes(x = max, weights = area,  group = decade, colour = decade)) + 
      geom_density() + facet_wrap(~SectorName+ Zone) 
    
-    print(gspark)
-    print(gdens_min + ggtitle(sprintf("%s", useasons[iseason])))
-    print(gdens_max + ggtitle(sprintf("%s", useasons[iseason])))
-    
+   op <- options(warn = -1)
+  if (nrow(spark_data) > 1)  print(gspark)
+    if (nrow(density_data) > 1) print(gdens_min + ggtitle(sprintf("%s", useasons[iseason])))
+    if (nrow(density_data) > 1) print(gdens_max + ggtitle(sprintf("%s", useasons[iseason])))
+    par(op)
   }
 }
-dev.off()
+
+
+```

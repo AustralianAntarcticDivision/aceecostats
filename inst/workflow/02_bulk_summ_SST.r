@@ -71,6 +71,7 @@ for (i in seq_along(sparkline_list)) {
 }  
 
 sp_line <- bind_rows(sparkline_list)
+#db$con %>% db_drop_table(table='sst_sparkline_tab')
 dplyr::copy_to(db, sp_line, "sst_sparkline_tab", temporary = FALSE)
 #saveRDS(sp_line, file.path(outf, "sparky_line.rds"))
 
@@ -138,4 +139,7 @@ big_tab <- bind_rows(big_tab)
 big_tab$area <- raster::extract(gridarea, big_tab$cell_)
 
 big_tab <- big_tab %>% left_join(ucell %>% select(-area), "cell_") %>% inner_join(aes_zone_data) %>% select(-ID)
+
+db$con %>% db_drop_table(table='sst_density_tab')
+
 copy_to(db, big_tab, "sst_density_tab", temporary = FALSE)
