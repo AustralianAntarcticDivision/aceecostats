@@ -65,7 +65,7 @@ for (i in seq_along(sparkline_list)) {
     group_by(SectorName, Zone) %>% 
     # summarize(meanmin = mean(minval), meanmax = mean(maxval)) %>% 
     summarize(chla_johnson = mean(chla_johnson), chla_nasa = mean(chla_nasa)) %>% 
-    mutate(season_year = start_date)
+    mutate(season_year = start_date) %>% ungroup()
   sparkline_list[[i]] <- sparkys
   print(i)
 }  
