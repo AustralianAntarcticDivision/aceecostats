@@ -19,7 +19,17 @@ reproj_tibble <- function(x, ingrid, outgrid) {
   dcells <- distinct(x, cell_)
   outcell <- cellnumbers(outgrid, spTransform(xyFromCell(ingrid, dcells$cell_, spatial=TRUE), projection(outgrid)))
 }
-
+lat.labs<- function(the.proj="polar"){
+  if(the.proj=="latlon"){
+    ext <- extent(aes_zone_ll)
+    text("Polar", x=ext@xmin, y=ext@ymin, xpd=NA, pos=2, cex=0.6)
+    text("High latitude", x=ext@xmin, y=ext@ymin*0.8, xpd=NA, pos=2, cex=0.6)
+    text("Mid latitude", x=ext@xmin, y=ext@ymin*0.6, xpd=NA, pos=2, cex=0.6)
+  }
+  if(the.proj=="polar"){
+    text(c("Polar", "High latitude", "Mid latitude"), x=c(113064.6,-1017581.1,-3642294), y=c(-1518296,-2285519,-3012363), cex=0.5, col=rgb(0,0,0,0.7))
+  }
+}
 icegrid <- raadtools::readice() * 0
 sstgrid <- raster(extent(-180, 180, -80, -30), crs = "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0", res = 0.25)
 epoch <- ISOdatetime(1970, 1, 1, 0, 0, 0, tz = "GMT")
@@ -69,17 +79,6 @@ server <- function(input, output) {
     plot(aes_zone, col = aes_zone$colour, border="grey")
     text(labs$x, labs$y, labs$labels, cex=0.6)
     # latitude zone labels
-    lat.labs<- function(the.proj="polar"){
-      if(the.proj=="latlon"){
-        ext <- extent(aes_zone_ll)
-        text("Polar", x=ext@xmin, y=ext@ymin, xpd=NA, pos=2, cex=0.6)
-        text("High latitude", x=ext@xmin, y=ext@ymin*0.8, xpd=NA, pos=2, cex=0.6)
-        text("Mid latitude", x=ext@xmin, y=ext@ymin*0.6, xpd=NA, pos=2, cex=0.6)
-      }
-      if(the.proj=="polar"){
-        text(c("Polar", "High latitude", "Mid latitude"), x=c(113064.6,-1017581.1,-3642294), y=c(-1518296,-2285519,-3012363), cex=0.5, col=rgb(0,0,0,0.7))
-      }
-    }
     lat.labs()
   })
   
