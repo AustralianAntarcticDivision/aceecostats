@@ -8,11 +8,20 @@ library(raster)
 library(feather)
 library(dplyr)
 library(ggplot2)
+library(plotly)
 ## local path to required cache files
 datapath <- "/mnt/acebulk"
 
+jet.colors <-
+  colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan",
+                     "#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000"))
 
+reproj_tibble <- function(x, ingrid, outgrid) {
+  dcells <- distinct(x, cell_)
+  outcell <- cellnumbers(outgrid, spTransform(xyFromCell(ingrid, dcells$cell_, spatial=TRUE), projection(outgrid)))
+}
 
+#ice_in_sst <- cellnumbers(icegrid, spTransform(rasterToPoints(sstgrid, spatial = TRUE), projection(icegrid)))
  library(ggplot2)
  library(tidyr)
  
@@ -53,32 +62,72 @@ datapath <- "/mnt/acebulk"
 library(shiny)
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(
+ui <- function(request) {
+  fluidPage(
   
   # Application title
-  titlePanel("Habitat assessment"),
+  titlePanel("Southern Ocean Ecosystems Habitat Assessment", "Southern Ocean Ecosystems Habitat Assessment"),
   
+  bookmarkButton(),
   # Sidebar with a slider input for number of bins 
   sidebarLayout(
     sidebarPanel(
       selectInput("region", "Region",  region_names), 
       selectInput("zone", "Zone \n(Continent ice-only, Mid-lat sst-only)", zone_names), 
-      selectInput("season", "Season (ignored for ice)", c("Summer","Winter"))
+      selectInput("season", "Season (ignored for ice)", c("Summer","Winter")), 
+      #checkboxInput("interactive", "interactive? (be patient)", FALSE), 
+      # selectInput("toggle", "Flip map Polar<->Plate Carrée"),
+      selectInput("palette", "Palette for map", choices = c("blues", "sst", "ice", "viridis", "inferno", "festival", "baser")), 
+      selectInput("n_colours", "Number of colours for map", choices = c(3, 7, 11, 13, 25, 50, 100), selected = 11), 
+      checkboxInput("coord1", "1:1 aspect ratio?", TRUE)
     ),
     
     # Show a plot of the generated distribution
     mainPanel(
       tabsetPanel(
-       tabPanel("Sea ice days", plotOutput("ice_sparkPlot"), plotOutput("ice_mapPlot")), 
-       tabPanel("SST", plotOutput("sst_sparkPlot"), plotOutput("sstmin_mapPlot"), plotOutput("sstmax_mapPlot"))
+       tabPanel("Sea ice days", plotOutput("ice_sparkPlot"), plotOutput("ice_density"), plotOutput("ice_mapPlot")), 
+       tabPanel("SST", plotOutput("sst_sparkPlot"), plotOutput("sst_density"), plotOutput("sstmin_mapPlot"), plotOutput("sstmax_mapPlot")), 
+       tabPanel("Index map", plotOutput("polar_Map"), plotOutput("ll_Map")),
+       tabPanel("Help", htmlOutput("helptext"))
       )
     )
   )
 )
-
+}
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   
+output$polar_Map <- renderPlot({
+
+  labs <- data.frame(x= c(112406,4488211,-1734264,-4785284), y=c(4271428,-224812,-3958297,-104377), labels=c("Atlantic","Indian", "West Pacific", "East Pacific"))
+  labs <- SpatialPointsDataFrame(labs[,1:2],labs, proj4string = CRS(proj4string(aes_zone)))
+  plot(aes_zone, col = aes_zone$colour, border="grey")
+  text(labs$x, labs$y, labs$labels, cex=0.6)
+  
+  # latitude zone labels
+  lat.labs<- function(the.proj="polar"){
+    if(the.proj=="latlon"){
+      ext <- extent(aes_zone_ll)
+      text("Polar", x=ext@xmin, y=ext@ymin, xpd=NA, pos=2, cex=0.6)
+      text("High latitude", x=ext@xmin, y=ext@ymin*0.8, xpd=NA, pos=2, cex=0.6)
+      text("Mid latitude", x=ext@xmin, y=ext@ymin*0.6, xpd=NA, pos=2, cex=0.6)
+    }
+    if(the.proj=="polar"){
+      text(c("Polar", "High latitude", "Mid latitude"), x=c(113064.6,-1017581.1,-3642294), y=c(-1518296,-2285519,-3012363), cex=0.5, col=rgb(0,0,0,0.7))
+    }
+  }
+  lat.labs()
+})
+
+output$ll_Map <- renderPlot({
+  labs <- data.frame(x= c(112406,4488211,-1734264,-4785284), y=c(4271428,-224812,-3958297,-104377), labels=c("Atlantic","Indian", "West Pacific", "East Pacific"))
+  labs <- SpatialPointsDataFrame(labs[,1:2],labs, proj4string = CRS(proj4string(aes_zone)))
+  
+  plot(aes_zone_ll, col = aes_zone_ll$colour, border="grey")
+  ll_labs <- spTransform(labs, proj4string(aes_zone_ll))
+  text(ll_labs$x, ll_labs$y, labels=labs$labels, cex=0.6)
+  lat.labs("latlon")
+})
   output$ice_sparkPlot <- renderPlot({
     # generate bins based on input$bins from ui.R
     x    <- tbl(db, "ice_days_sparkline_tab_nozone") %>% 
@@ -88,9 +137,23 @@ server <- function(input, output) {
       filter(date > as.POSIXct("1981-02-15")) 
     #bins <- seq(min(x), max(x), length.out = input$bins + 1)
     gspark <-  ggplot(x, aes(x = date, y = days)) + geom_line() #+ facet_wrap(~Season)
+    #if (input$interactive)    ggplotly(gspark) else gspark
     gspark
   })
+  cpal <- reactive({
+    switch(input$palette, 
+           blues = scales::seq_gradient_pal( "#132B43", "#56B1F7", "Lab")(seq(0, 1, length.out = as.integer(as.integer(input$n_colours)))), 
+           sst = palr::sstPal(as.integer(input$n_colours)), 
+           ice = palr::icePal(as.integer(input$n_colours)),
+           viridis = viridis::viridis(as.integer(input$n_colours)), 
+           inferno = viridis::inferno(as.integer(input$n_colours)), 
+           festival = jet.colors(as.integer(input$n_colours)), 
+           baser = rep(palette(), length = as.integer(input$n_colours)))
+  })
   output$ice_mapPlot <- renderPlot({
+    colour_pal <- cpal()
+    
+    
     pmap <- subset(polymap, SectorName == input$region & Zone == input$zone)
     dens <- tbl(db, "ice_days_density_tab")   %>% 
       filter(!Zone == "Mid-Latitude") %>% 
@@ -98,12 +161,45 @@ server <- function(input, output) {
       filter(SectorName == input$region, Zone == input$zone) %>% 
       collect(n = Inf) %>% mutate(date = date + epoch)
     if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
+    
+    dens <- dens %>% group_by(decade, cell_) %>% summarize(days = mean(days))
     dens[c("x", "y")] <- as.data.frame(raster::xyFromCell(icegrid, dens$cell_))
-    gmap <- ggplot(dens, aes(x, y, fill = days)) + geom_raster() + facet_wrap(~decade) + coord_equal() + 
+    gmap <- ggplot(dens, aes(x, y, fill = days)) + geom_raster() + facet_wrap(~decade)  + 
+      scale_fill_gradientn(colours = colour_pal) + 
       geom_path(data = fortify(pmap), aes(x = long, y = lat, group = group, fill = NULL))
+    if (input$coord1) gmap <- gmap + coord_equal()
     gmap
   })
+  output$ice_density <- renderPlot({
+    dens <- tbl(db, "ice_days_density_tab")   %>% 
+      #filter(!Zone == "Mid-Latitude") %>% 
+      filter(days > 0, days < 365) %>% 
+      filter(SectorName == input$region, Zone == input$zone) %>% 
+      collect(n = Inf) %>% mutate(date = date + epoch)
+    if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
+    ggplot(dens, aes(days, group = decade, weight = area, colour = decade)) + geom_density()  + facet_wrap(~Zone) 
+ 
+  })
+  get_sst_density <- reactive({
+    tbl(db, "sst_density_tab")   %>% 
+      #filter(!Zone == "Mid-Latitude") %>% 
+      filter(SectorName == input$region, Zone == input$zone,season == input$season) %>% 
+      collect(n = Inf) 
+      
+  }
+      )
   
+  get_sst_map <- reactive({
+    fortify(subset(polysstmap, SectorName == input$region & Zone == input$zone))
+  })
+  
+  output$sst_density <- renderPlot({
+     dens <- get_sst_density()
+     dens <- dens %>% gather(measure, sst,  -decade, -cell_, -count,   -season, -area, -SectorName, -Zone )
+    if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
+    ggplot(dens, aes(sst, group = decade, weight = area, colour = decade)) + geom_density()  + facet_wrap(measure~Zone) 
+    
+  })
   output$sst_sparkPlot <- renderPlot({
     # generate bins based on input$bins from ui.R
     x    <- tbl(db, "sst_sparkline_tab") %>% 
@@ -114,42 +210,73 @@ server <- function(input, output) {
     if (nrow(x) < 1) return(ggplot() + ggtitle("no data"))
     #bins <- seq(min(x), max(x), length.out = input$bins + 1)
     gspark <-  ggplot(x, aes(x = date, y = sst, group = measure, colour = measure)) + geom_line() + facet_wrap(~Season)
+    #if (input$interactive)    ggplotly(gspark) else gspark
     gspark
   })
   
   output$sstmin_mapPlot <- renderPlot({
+    colour_pal <- cpal()
     
-    sstmap <- fortify(subset(polysstmap, SectorName == input$region & Zone == input$zone))
-    dens <- tbl(db, "sst_density_tab")   %>% 
-     # filter(!Zone == "Mid-Latitude") %>% 
-    #  filter(days > 0, days < 365) %>% 
-      filter(SectorName == input$region, Zone == input$zone, season == input$season) %>% 
-      collect(n = Inf) 
+    
+    sstmap <- get_sst_map()
+    dens <- get_sst_density()
+    dens <- dens %>% group_by(decade, cell_) %>% summarize(min = mean(min))
     if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
     dens[c("x", "y")] <- as.data.frame(raster::xyFromCell(sstgrid, dens$cell_))
-    gmap <- ggplot(dens, aes(x, y, fill = min)) + geom_raster() + facet_wrap(~decade) + coord_equal() + 
-      scale_fill_gradientn(colours = palr::sstPal(100)) + 
+    gmap <- ggplot(dens, aes(x, y, fill = min)) + geom_raster() + facet_wrap(~decade) + 
+      scale_fill_gradientn(colours = colour_pal) + 
       geom_path(data = sstmap, aes(x = long, y = lat, group = group, fill = NULL))
+    if (input$coord1) gmap <- gmap + coord_equal()
     gmap
   })
   
   output$sstmax_mapPlot <- renderPlot({
+    colour_pal <- cpal()
     
-    sstmap <- fortify(subset(polysstmap, SectorName == input$region & Zone == input$zone))
-    dens <- tbl(db, "sst_density_tab")   %>% 
-      # filter(!Zone == "Mid-Latitude") %>% 
-      #  filter(days > 0, days < 365) %>% 
-      filter(SectorName == input$region, Zone == input$zone, season == input$season) %>% 
-      collect(n = Inf) 
+    
+    sstmap <- get_sst_map()
+    dens <- get_sst_density()
     if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
+    dens <- dens %>% group_by(decade, cell_) %>% summarize(max = mean(max))
     dens[c("x", "y")] <- as.data.frame(raster::xyFromCell(sstgrid, dens$cell_))
-    gmap <- ggplot(dens, aes(x, y, fill = max)) + geom_raster() + facet_wrap(~decade) + coord_equal() + 
-      scale_fill_gradientn(colours = palr::sstPal(100)) + 
+    gmap <- ggplot(dens, aes(x, y, fill = max)) + geom_raster() + facet_wrap(~decade) + 
+      scale_fill_gradientn(colours = colour_pal) + 
       geom_path(data = sstmap, aes(x = long, y = lat, group = group, fill = NULL))
+    if (input$coord1) gmap <- gmap + coord_equal()
     gmap
   })
+  
+  
+  output$helptext <- renderUI({
+    lapply(c("Australian Antarctic Division and the Antarctic Climate and Ecosystems Cooperative Research Centre, Hobart", 
+       "Explore assessment variables on each tab", "", 
+             "Bookmark a particular view with the \"Bookmark\" button, share a link to what you see",
+             "", "",
+             "Use the controls to specify combinations of region, zone, season and options for the maps",
+             "Region: assessment region, one of four radial southern ocean sectors", 
+             "Zone: mid-latitude, high-latitude, continent (the continental shelf around Antarctica)", 
+             "Season: Summer or Winter (southern hemisphere), not relevant for sea ice days which is calculated within annual window from 15 February",
+             "Palette: only controls the fill gradient for the map",
+             "Number of colours for map: coarse control over the colour interpolation",
+             "1:1 aspect ratio: toggle this for the map, defaults to equal coordinate spacing in x-y, setting to off can improve the layout",
+             "", "", "Region on the map is plotted along with polygon boundary,", 
+            "sst lumps high-latitude and continental shelf together, so the region boundaries aren't always exclusive", 
+            "ice distinguishes continent and high-latitude, but ignores mid-latitudes", "Source code for this app is here:", 
+            "", "",
+             "https://github.com/AustralianAntarcticDivision/aceecostats/blob/master/inst/workflow/graphics/shiny-habitat-assessment.R", 
+             "Please file feedback in the repo's issues tab: https://github.com/AustralianAntarcticDivision/aceecostats/issues", 
+             "TODO: ", 
+             "- chlorophyll", 
+             "- make absolute fill scale for min/max SST",
+             "- flip between map projections", 
+             "- plotly", 
+             "- ..."), tags$p)
+    
+  })
+  
+  
 }
 
 # Run the application 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, enableBookmarking = "url")
 
