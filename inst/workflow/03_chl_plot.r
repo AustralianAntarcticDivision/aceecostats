@@ -20,11 +20,6 @@ tempd <- dd %>% filter(season == seas, decade == dec) %>%
 
 ##################### original
 
-decade_maker <- function(x) {
-  #cut(as.integer(format(x, "%Y")), c(1980, 1992, 2004, 2016), lab = c("1980-1992", "1991-2004","2002-2016"))
-  cut(as.integer(format(x, "%Y")), c(1977, 1987, 1997, 2007, 2017), 
-      lab = c("1977-1987", "1987-1998","1998-2007", "2007-2017"))
-}
 ## preparation
 library(aceecostats)
 library(raster)

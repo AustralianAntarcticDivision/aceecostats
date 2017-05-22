@@ -1,10 +1,18 @@
 
-
+#' Decade classification
+#' 
+#' 
+#' This changes over time, but currently it's clean on 10 year boundaries (1977-2017). 
+#' @param x date-time vector
+#'
+#' @return classified factor vector
+#' @export
+#'
 decade_maker <- function(x) {
   #cut(as.integer(format(x, "%Y")), c(1980, 1992, 2004, 2016), lab = c("1980-1992", "1991-2004","2002-2016"))
-  cut(as.integer(format(x, "%Y")), c(1981, 1990, 1999, 2008, 2016), lab = c("1981-1990", "1990-1999","1999-2008", "2008-2016"))
+  cut(as.integer(format(x, "%Y")), c(1977, 1987, 1997, 2007, 2017), 
+      lab = c("1977-1987", "1987-1998","1998-2007", "2007-2017"))
 }
-
 
 #' @importFrom raster readIniFile
 #' @importFrom tibble as_tibble

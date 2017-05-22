@@ -52,12 +52,6 @@ for (i in seq_along(listtab)) {
   print(i)
 }
 
-## now process the summaries down
-decade_maker <- function(x) {
-  #cut(as.integer(format(x, "%Y")), c(1980, 1992, 2004, 2016), lab = c("1980-1992", "1991-2004","2002-2016"))
-  cut(as.integer(format(x, "%Y")), c(1977, 1987, 1997, 2007, 2017), 
-      lab = c("1977-1987", "1987-1998","1998-2007", "2007-2017"))
-}
 
 cell_tab <- bind_rows(listtab) %>% 
   mutate(decade = decade_maker(date)) %>% 
