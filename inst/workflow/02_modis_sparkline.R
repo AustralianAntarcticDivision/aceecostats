@@ -3,11 +3,6 @@ library(roc)
 files <- chla_johnsonfiles(product = "MODISA")
 files$season_segs <- as.integer(factor(cumsum(c(0, abs(diff(unclass(factor(aes_season(files$date)))))))))
 
-label <- "modisa"
-# # ## initialize the bin logic for MODISA
-init <- initbin(NUMROWS = 4320)
-
-
 library(raster)
 library(aceecostats)
 library(tibble)

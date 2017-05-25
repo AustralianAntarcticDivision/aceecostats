@@ -164,9 +164,11 @@ server <- function(input, output) {
   }
   )
   get_chl_density <- reactive({
-    tbl(db, "chl_density_tab")   %>% 
+    tbl(db, "chl_density_tab")   %>% filter(season == input$season) %>%  
+      left_join(tbl(db, "modis_bins"),  c("bin_num" = "cell_")) %>% collect(n = Inf) 
+    
       #filter(!Zone == "Mid-Latitude") %>% 
-      filter(SectorName == input$region, Zone == input$zone,season == input$season) %>% 
+      #filter(SectorName == input$region, Zone == input$zone,season == input$season) %>% 
       collect(n = Inf) 
   }
   )
@@ -201,7 +203,7 @@ server <- function(input, output) {
     dens <- get_chl_density()
     dens <- dens %>% group_by(decade, cell_) %>% summarize(mean = mean(chla_johnson))
     if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
-    dens[c("x", "y")] <- as.data.frame(raster::xyFromCell(sstgrid, dens$cell_))
+    dens[c("x", "y")] <- as.data.frame(roc::bin2lonlat(dens$bin_num, 4320))
     gmap <- ggplot(dens, aes(x, y, fill = chla_johnson)) + geom_point(pch = 19, cex = 0.4) + facet_wrap(~decade) + 
       #scale_fill_gradientn(colours = colour_pal) + 
       scale_fill_gradientn(values = scl(head(colour_pal$breaks, -1)), colours = pal$cols)

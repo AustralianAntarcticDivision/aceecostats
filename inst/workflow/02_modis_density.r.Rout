@@ -82,7 +82,13 @@ The following objects are masked from ‘package:base’:
 +       mutate(decade = aceecostats:::decade_maker(date), season = useasons[iseason])
 +     
 +     icount <- icount + 1
-+     big_tab[[icount]] <- a_dat
++    # big_tab[[icount]] <- a_dat
++     if (icount == 1) {
++       copy_to(db, a_dat, "chl_density_tab", temporary = FALSE)                 # create table
++       
++     } else {
++       db_insert_into( con = db$con, table = "chl_density_tab", values = a_dat)
++     }
 +     print(icount)
 +     rm(a_dat)
 +     gc()
@@ -91,3 +97,32 @@ The following objects are masked from ‘package:base’:
 [1] 1
 [1] 2
 [1] 3
+[1] 4
+> 
+> 
+> #ucell <- tbl(db, "modis_bins") %>% collect(n = Inf)
+> 
+> #big_tab <- big_tab %>% left_join(ucell %>% select(-area), "cell_") %>% inner_join(aes_zone_data) %>% select(-ID)
+> 
+> #db$con %>% db_drop_table(table='chl_density_tab')
+> #copy_to(db, big_tab, "chl_density_tab", temporary = FALSE)
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> able='chl_density_tab')
+Error: unexpected ')' in "able='chl_density_tab')"
+Execution halted
