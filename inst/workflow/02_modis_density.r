@@ -4,6 +4,8 @@ library(aceecostats)
 files <- chla_johnsonfiles(product = "MODISA")
 files$season_segs <- as.integer(factor(cumsum(c(0, abs(diff(unclass(factor(aes_season(files$date)))))))))
 
+outf <- "/mnt/acebulk"
+db <- dplyr::src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
 
 ## season_year needs a formalization above (using date)
 ## collection list to store summary tables per season-i
@@ -20,8 +22,8 @@ icount <- 0
 idecade <- 1
 iseason <- 1
 
-library(future)
-plan(multiprocess)
+# library(future)
+# plan(multiprocess)
 
 
 
@@ -31,17 +33,14 @@ for (idecade in seq_along(udecades)) {
   for (iseason in seq_along(useasons)) {
     ## identify every day uniquely badged by season_year labels
     this_decade_days <- alldays %>% filter(decade == udecades[idecade], season == useasons[iseason])
-    #decade_years <- this_decade_days %>% split(.$season_year)
-    #list_of_seasons <- vector("list", length(decade_years))
-    #a_obj <- readAll(subset(obj, which(segs %in% this_decade_days$season_year)))
-    a_dat <- bind_rows(future_lapply(files$fullname[which(files$season_segs %in% this_decade_days$season_year)], readRDS)) %>% 
+   a_dat <- bind_rows(lapply(files$fullname[which(files$season_segs %in% this_decade_days$season_year)], readRDS)) %>% 
       group_by(bin_num)  %>% 
       summarize(chla_johnson = mean(chla_johnson), chla_nasa = mean(chla_nasa)) %>% 
       mutate(date = this_decade_days$date[1]) %>% 
       mutate(decade = aceecostats:::decade_maker(date), season = useasons[iseason])
     
     icount <- icount + 1
-    big_tab[[icount]] <- tab
+    big_tab[[icount]] <- a_dat
     print(icount)
     rm(a_dat)
     gc()
@@ -49,25 +48,8 @@ for (idecade in seq_along(udecades)) {
 }
 
 big_tab <- bind_rows(big_tab)
-big_tab$area <- 4600
 
-init <- initbin(NUMROWS = 4320)
-## counts up from the south
-maxbin <- init$totbin/2
-## unique grid map cell number
-#ucell <- tibble(cell_ = seq_len(ncell(ras)), area = values(gridarea))
-
-ucell <- tibble(cell_ = seq_len(maxbin), area = 4)
-## classify cell index by polygon
-# ucell$ID <- over(spTransform(xyFromCell(ras, ucell$cell_, spatial=TRUE), projection(aes_zone)), 
-#                  aes_zone)$ID
-xy <- sp::SpatialPoints(do.call(cbind, bin2lonlat(ucell$cell_, 4320)), proj4string = CRS("+init=epsg:4326"))
-ucell$ID <- over(spTransform(xy, projection(aes_zone)), 
-                 aes_zone)$ID
-
-ucell <- ucell %>% filter(!is.na(ID))
-
-
+ucell <- tbl(db, "modis_bins") %>% collect(n = Inf)
 
 big_tab <- big_tab %>% left_join(ucell %>% select(-area), "cell_") %>% inner_join(aes_zone_data) %>% select(-ID)
 

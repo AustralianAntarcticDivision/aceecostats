@@ -249,3 +249,36 @@ Joining, by = "season_segs"
 Joining, by = "ID"
 [1] 43
 Joining, by = "season_segs"
+Joining, by = "ID"
+[1] 44
+Joining, by = "season_segs"
+Joining, by = "ID"
+[1] 45
+Joining, by = "season_segs"
+Joining, by = "ID"
+[1] 46
+Joining, by = "season_segs"
+Joining, by = "ID"
+[1] 47
+Joining, by = "season_segs"
+Joining, by = "ID"
+[1] 48
+Joining, by = "season_segs"
+Joining, by = "ID"
+[1] 49
+Joining, by = "season_segs"
+Joining, by = "ID"
+[1] 50
+Joining, by = "season_segs"
+Joining, by = "ID"
+[1] 51
+> 
+> sp_line <- bind_rows(sparkline_list) %>% mutate(season = aes_season(season_year))
+> #db$con %>% db_drop_table(table='chl_sparkline_tab')
+> dplyr::copy_to(db, sp_line, "chl_sparkline_tab", temporary = FALSE)
+> #saveRDS(sp_line, file.path(outf, "sparky_line.rds"))
+> 
+> 
+> proc.time()
+    user   system  elapsed 
+1528.822  127.713 2384.131 

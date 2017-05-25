@@ -1,0 +1,93 @@
+
+R version 3.4.0 (2017-04-21) -- "You Stupid Darkness"
+Copyright (C) 2017 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[Previously saved workspace restored]
+
+> library(raadtools)
+Loading required package: raster
+Loading required package: sp
+Warning message:
+Installed Rcpp (0.12.11) different from Rcpp used to build dplyr (0.12.10).
+Please reinstall dplyr to avoid random crashes or undefined behavior. 
+> library(roc)
+Loading required package: dplyr
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:raster’:
+
+    intersect, select, union
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+> library(aceecostats)
+> files <- chla_johnsonfiles(product = "MODISA")
+> files$season_segs <- as.integer(factor(cumsum(c(0, abs(diff(unclass(factor(aes_season(files$date)))))))))
+> 
+> outf <- "/mnt/acebulk"
+> db <- dplyr::src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
+> 
+> ## season_year needs a formalization above (using date)
+> ## collection list to store summary tables per season-i
+> ## trim this to only summer and winter
+> time_tab <- vector("list", length(unique(files$season_segs)))
+> 
+> ## this loop 10 summers in a decade
+> alldays <- tibble(date = files$date, decade = aceecostats:::decade_maker(date), season = aes_season(date), 
++                   season_year = files$season_segs)
+> 
+> 
+> big_tab <- vector("list")
+> icount <- 0
+> idecade <- 1
+> iseason <- 1
+> 
+> # library(future)
+> # plan(multiprocess)
+> 
+> 
+> 
+> udecades <- unique(levels(alldays$decade)[alldays$decade])
+> useasons <- c("Spring", "Summer")
+> for (idecade in seq_along(udecades)) {
++   for (iseason in seq_along(useasons)) {
++     ## identify every day uniquely badged by season_year labels
++     this_decade_days <- alldays %>% filter(decade == udecades[idecade], season == useasons[iseason])
++    a_dat <- bind_rows(lapply(files$fullname[which(files$season_segs %in% this_decade_days$season_year)], readRDS)) %>% 
++       group_by(bin_num)  %>% 
++       summarize(chla_johnson = mean(chla_johnson), chla_nasa = mean(chla_nasa)) %>% 
++       mutate(date = this_decade_days$date[1]) %>% 
++       mutate(decade = aceecostats:::decade_maker(date), season = useasons[iseason])
++     
++     icount <- icount + 1
++     big_tab[[icount]] <- a_dat
++     print(icount)
++     rm(a_dat)
++     gc()
++   }
++ }
+[1] 1
+[1] 2
+[1] 3

@@ -24,26 +24,8 @@ aes_zone_data <- aes_zone@data[, c("ID", "SectorName", "Zone")]
 ## we trick it here so the ID overlay gets bundled together below
 aes_zone_data$Zone[aes_zone_data$Zone == "Continent"] <- "High-Latitude"
 
+ucell <- tbl(db, "modis_bins") %>% collect(n = Inf)
 
-## unique integer from 0 to ~nrow(sf)/90 for each three month period
-#segs <- cumsum(c(0, abs(diff(unclass(factor(aes_season(getZ(obj))))))))
-
-
-init <- initbin(NUMROWS = 4320)
-## counts up from the south
-maxbin <- init$totbin/2
-## unique grid map cell number
-#ucell <- tibble(cell_ = seq_len(ncell(ras)), area = values(gridarea))
-
-ucell <- tibble(cell_ = seq_len(maxbin), area = 4)
-## classify cell index by polygon
-# ucell$ID <- over(spTransform(xyFromCell(ras, ucell$cell_, spatial=TRUE), projection(aes_zone)), 
-#                  aes_zone)$ID
-xy <- sp::SpatialPoints(do.call(cbind, bin2lonlat(ucell$cell_, 4320)), proj4string = CRS("+init=epsg:4326"))
-ucell$ID <- over(spTransform(xy, projection(aes_zone)), 
-                 aes_zone)$ID
-
-ucell <- ucell %>% filter(!is.na(ID))
 ## main loop over all season-years
 usegs <- distinct(files, season_segs)
 sparkline_list <- vector("list", nrow(usegs))
