@@ -9,7 +9,7 @@ library(dplyr)
 library(ggplot2)
 library(plotly)
 library(tidyr)
-
+library(DT)
 db <- src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
 
 jet.colors <-
@@ -62,7 +62,7 @@ ui <- function(request) {
       # Show plots, in tabs
       mainPanel(
         tabsetPanel(
-          tabPanel("Sea ice days", plotOutput("ice_sparkPlot"), plotOutput("ice_density"), plotOutput("ice_mapPlot")), 
+          tabPanel("Sea ice days", plotOutput("ice_sparkPlot"), plotOutput("ice_density"), plotOutput("ice_mapPlot"), DT::dataTableOutput("icerat")), 
           tabPanel("SST", plotOutput("sst_sparkPlot"), plotOutput("sst_density"), plotOutput("sstmin_mapPlot"), plotOutput("sstmax_mapPlot")), 
           tabPanel("Index map", plotOutput("polar_Map"), plotOutput("ll_Map")),
           tabPanel("Help", htmlOutput("helptext"))
@@ -127,6 +127,15 @@ server <- function(input, output) {
     if (input$coord1) gmap <- gmap + coord_equal()
     gmap
   })
+  output$icerat <- DT::renderDataTable({
+    dens <- tbl(db, "ice_days_density_tab")   %>% 
+      filter(!Zone == "Mid-Latitude") %>% 
+      filter(days > 0, days < 365) %>% 
+      filter(SectorName == input$region, Zone == input$zone) %>% 
+      collect(n = Inf) %>% mutate(date = date + epoch)
+    dens
+  }, options = list(lengthChange = FALSE)
+  )
   output$ice_density <- renderPlot({
     dens <- tbl(db, "ice_days_density_tab")   %>% 
       #filter(!Zone == "Mid-Latitude") %>% 
