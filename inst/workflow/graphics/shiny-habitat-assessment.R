@@ -52,7 +52,7 @@ ui <- function(request) {
       sidebarPanel(
         selectInput("region", "Region",  region_names), 
         selectInput("zone", "Zone \n(Continent ice-only, Mid-lat sst-only)", zone_names), 
-        selectInput("season", "Season (ignored for ice)", c("Summer","Winter")), 
+        selectInput("season", "Season (ignored for ice)", c("Spring", "Summer", "Autumn", "Winter")), 
         #checkboxInput("interactive", "interactive? (be patient)", FALSE), 
         # selectInput("toggle", "Flip map Polar<->Plate Carrée"),
         selectInput("palette", "Palette for map", choices = c("blues", "sst", "ice", "viridis", "inferno", "festival", "baser")), 
@@ -62,6 +62,7 @@ ui <- function(request) {
       # Show plots, in tabs
       mainPanel(
         tabsetPanel(
+          tabPanel("Chlorophyll-a", plotOutput("chl_sparkPlot"), plotOutput("chl_density"), plotOutput("chl_mapPlot")), 
           tabPanel("Sea ice days", plotOutput("ice_sparkPlot"), plotOutput("ice_density"), plotOutput("ice_mapPlot"), DT::dataTableOutput("icerat")), 
           tabPanel("SST", plotOutput("sst_sparkPlot"), plotOutput("sst_density"), plotOutput("sstmin_mapPlot"), plotOutput("sstmax_mapPlot")), 
           tabPanel("Index map", plotOutput("polar_Map"), plotOutput("ll_Map")),
@@ -89,6 +90,16 @@ server <- function(input, output) {
     ll_labs <- spTransform(labs, proj4string(aes_zone_ll))
     text(ll_labs$x, ll_labs$y, labels=labs$labels, cex=0.6)
     lat.labs("latlon")
+  })
+  output$chl_sparkPlot <- renderPlot({
+    x    <- tbl(db, "chl_sparkline_tab") %>% 
+      filter(SectorName == input$region, Zone == input$zone, season == input$season) %>% collect(n = Inf) %>% 
+      mutate(date = season_year + epoch) %>% gather(measure, chla, -date, -SectorName, -Zone, -season, -season_year)
+    
+    
+    gspark <-  ggplot(x, aes(x = date, y = chla, group = measure, colour = measure)) + geom_line() #+ facet_wrap(~Season)
+    #if (input$interactive)    ggplotly(gspark) else gspark
+    gspark
   })
   output$ice_sparkPlot <- renderPlot({
     x    <- tbl(db, "ice_days_sparkline_tab_nozone") %>% 
@@ -152,7 +163,13 @@ server <- function(input, output) {
       collect(n = Inf) 
   }
   )
-  
+  get_chl_density <- reactive({
+    tbl(db, "chl_density_tab")   %>% 
+      #filter(!Zone == "Mid-Latitude") %>% 
+      filter(SectorName == input$region, Zone == input$zone,season == input$season) %>% 
+      collect(n = Inf) 
+  }
+  )
   get_sst_map <- reactive({
     fortify(subset(polysstmap, SectorName == input$region & Zone == input$zone))
   })
@@ -177,6 +194,22 @@ server <- function(input, output) {
     #if (input$interactive)    ggplotly(gspark) else gspark
     gspark
   })
+  output$chl_mapPlot <- renderPlot({
+    colour_pal <- palr::chlPal(palette = TRUE)
+    scl <- function(x) {rng <- range(x, na.rm = T); (x - rng[1])/diff(rng)}
+    sstmap <- get_sst_map()
+    dens <- get_chl_density()
+    dens <- dens %>% group_by(decade, cell_) %>% summarize(mean = mean(chla_johnson))
+    if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
+    dens[c("x", "y")] <- as.data.frame(raster::xyFromCell(sstgrid, dens$cell_))
+    gmap <- ggplot(dens, aes(x, y, fill = chla_johnson)) + geom_point(pch = 19, cex = 0.4) + facet_wrap(~decade) + 
+      #scale_fill_gradientn(colours = colour_pal) + 
+      scale_fill_gradientn(values = scl(head(colour_pal$breaks, -1)), colours = pal$cols)
+      geom_path(data = sstmap, aes(x = long, y = lat, group = group, fill = NULL))
+    if (input$coord1) gmap <- gmap + coord_equal()
+    gmap
+  })
+  
   
   output$sstmin_mapPlot <- renderPlot({
     colour_pal <- cpal()
