@@ -17,7 +17,7 @@ alldays <- tibble(date = files$date, decade = aceecostats:::decade_maker(date), 
                   season_year = files$season_segs)
 
 icount <- 0
-
+#db$con %>% db_drop_table(table='chl_density_tab')
 udecades <- unique(levels(alldays$decade)[alldays$decade])
 useasons <- c("Spring", "Summer")
 for (idecade in seq_along(udecades)) {
@@ -32,7 +32,7 @@ for (idecade in seq_along(udecades)) {
     
     icount <- icount + 1
     if (icount == 1) {
-      copy_to(db, a_dat, "chl_density_tab", temporary = FALSE)
+      copy_to(db, a_dat, "chl_density_tab", temporary = FALSE, indexes = list("bin_num", "decade", "season"))
     } else {
       db_insert_into( con = db$con, table = "chl_density_tab", values = a_dat)
     }
@@ -41,32 +41,3 @@ for (idecade in seq_along(udecades)) {
     gc()
   }
 }
-
-
-#aes_zone_data <- aes_zone@data
-#ucell <- tbl(db, "modis_bins") %>% select(-area, -ID) %>%  left_join(tbl(db, "modis_bins"),  "cell_") %>% collect(n = Inf) 
-#tbl(db, "chl_density_tab") %>%  left_join(tbl(db, "modis_bins"),  c("bin_num" = "cell_")) %>% collect(n = Inf) 
-
-#%>%  inner_join(aes_zone_data) %>% select(-ID)
-
-#big_tab <- big_tab %>% left_join(ucell %>% select(-area), "cell_") %>% inner_join(aes_zone_data) %>% select(-ID)
-
-#db$con %>% db_drop_table(table='chl_density_tab')
-#copy_to(db, big_tab, "chl_density_tab", temporary = FALSE)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -12,7 +12,9 @@ xy <- sp::SpatialPoints(do.call(cbind, bin2lonlat(ucell$cell_, 4320)), proj4stri
 ucell$ID <- over(spTransform(xy, raster::projection(aes_zone)), 
                  aes_zone)$ID
 
-ucell <- ucell %>% filter(!is.na(ID))
+ucell <- 
+  ucell %>% filter(!is.na(ID)) %>% inner_join(aes_zone@data %>% select(-area_km2, -colour))
 db <- dplyr::src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
-
-dplyr::copy_to( db, ucell, "modis_bins", temporary = FALSE)
+#db$con %>% db_drop_table(table='modis_bins') 
+dplyr::copy_to( db, ucell, "modis_bins", temporary = FALSE, index= list( "SectorName", 
+                                                                        "Zone"))
