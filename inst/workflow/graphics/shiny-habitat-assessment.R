@@ -1,5 +1,5 @@
 ## admin install with
-#file.copy("inst/workflow/graphics/shiny-habitat-assessment.R", "/srv/shiny-server/habitat-assess/basic/app.R")
+#file.copy("inst/workflow/graphics/shiny-habitat-assessment.R", "/srv/shiny-server/habitat-assess/variables/app.R")
 
 ## test mode
 input <- structure(list(region = "Atlantic", zone = "Mid-Latitude", season = "Summer"), .Names = c("region", 
@@ -8,10 +8,9 @@ input$coord1 <- TRUE
 ## preparation
 library(aceecostats)
 library(raster)
-library(feather)
 library(dplyr)
 library(ggplot2)
-library(plotly)
+
 library(tidyr)
 library(DT)
 db <- src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
@@ -34,7 +33,10 @@ lat.labs<- function(the.proj="polar"){
     text(c("Polar", "High latitude", "Mid latitude"), x=c(113064.6,-1017581.1,-3642294), y=c(-1518296,-2285519,-3012363), cex=0.5, col=rgb(0,0,0,0.7))
   }
 }
-icegrid <- raadtools::readice() * 0
+icegrid <- raster(extent(-3950000, 3950000, -3950000, 4350000), 
+crs = "+proj=stere +lat_0=-90 +lat_ts=-70 +lon_0=0 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs", 
+res = 25000)
+
 sstgrid <- raster(extent(-180, 180, -80, -30), crs = "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0", res = 0.25)
 epoch <- ISOdatetime(1970, 1, 1, 0, 0, 0, tz = "GMT")
 
@@ -44,7 +46,7 @@ polysstmap <- aes_zone_ll
 zone_names <- c("High-Latitude", "Mid-Latitude", "Continent")
 region_names <- (tbl(db, "ice_days_sparkline_tab_nozone") %>% select(SectorName) %>% distinct() %>% collect())$SectorName
 library(shiny)
-
+rm(input)
 # Define UI for application that conquers the universe
 ui <- function(request) {
   fluidPage(
@@ -131,18 +133,25 @@ server <- function(input, output) {
     ggplot(dens, aes(sst, group = decade, weight = area, colour = decade)) + geom_density()  + facet_wrap(measure~Zone) 
     
   })
-  
+  output$chl_density <- renderPlot({
+    dens <- get_chl_density()
+    #dens <- dens %>% gather(measure, chla,  -decade, -bin_num,   -season,  -SectorName, -Zone )
+    if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
+    ggplot(dens, aes(chla_johnson, group = decade,  colour = decade)) + geom_density()  + facet_wrap(~Zone)  + 
+      xlim(0, 5)
+    
+  })
   # MAPS
   output$chl_mapPlot <- renderPlot({
     colour_pal <- palr::chlPal(palette = TRUE)
     scl <- function(x) {rng <- range(x, na.rm = T); (x - rng[1])/diff(rng)}
     sstmap <- get_sst_map()
     dens <- get_chl_density()
-    dens <- dens %>% group_by(decade, bin_num) %>% summarize(mean = mean(chla_johnson))
+    #dens <- dens %>% group_by(decade, bin_num, SectorName, Zone) %>% summarize(mean = mean(chla_johnson))
     if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
     dens[c("x", "y")] <- as.data.frame(roc::bin2lonlat(dens$bin_num, 4320))
-    dens1 <- sample_n(dens, nrow(dens)/1e2)
-    gmap <- ggplot(dens1, aes(x, y, colour = chla_johnson)) + 
+    #dens1 <- sample_n(dens, nrow(dens)/1e3)
+    gmap <- ggplot(dens, aes(x, y, colour = chla_johnson)) + 
       geom_point(pch = ".") + facet_wrap(~decade) + 
       #scale_fill_gradientn(colours = colour_pal) + 
       scale_colour_gradientn(values = scl(head(colour_pal$breaks, -1)), colours = colour_pal$cols) + 
@@ -230,8 +239,17 @@ server <- function(input, output) {
       collect(n = Inf) 
   })
   get_chl_density <- reactive({
-    tbl(db, "chl_density_tab")   %>% filter(season == input$season) %>%  
-      left_join(tbl(db, "modis_bins"),  c("bin_num" = "cell_")) %>% collect(n = Inf) 
+    # tbl(db, "chl_density_tab")   %>% filter(season == input$season) %>%  
+    #   left_join(tbl(db, "modis_bins"),  c("bin_num" = "cell_")) %>% collect(n = Inf) 
+     tbl(db, "chl_density_tab")   %>% filter(ROWID %% 10 == 0) %>% 
+      filter(season == input$season) %>%  
+      select(-date, -chla_nasa) %>% 
+      left_join(tbl(db, "modis_bins") %>% #filter(ROWID %% 10 == 0) %>% 
+                  filter(SectorName == input$region, Zone == input$zone ) %>% select(-area, -ID),  c("bin_num" = "cell_")) %>% 
+      collect() %>% filter(!is.na(Zone), !is.na(SectorName))
+    
+    
+    
     
     #filter(!Zone == "Mid-Latitude") %>% 
     #filter(SectorName == input$region, Zone == input$zone,season == input$season) %>% 
