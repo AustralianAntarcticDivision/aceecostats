@@ -1,9 +1,6 @@
 
-## now relying on scripts here MDS 2017-05-21
-##"data_local/acecrc.org.au/ocean_colour/"
-
-
-
+## now relying on scripts here MDS 2017-06-19
+#https://github.com/AustralianAntarcticDivision/ocean_colour
 
 
 # library(dplyr)

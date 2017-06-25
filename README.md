@@ -9,7 +9,19 @@ readme
 Processing Workflow
 -------------------
 
-This is in-progress, current map of the entire process is here: <https://github.com/AustralianAntarcticDivision/aceecostats/issues/14>
+00 precalulate structures
+-------------------------
+
+-   inst/workflow/00\_L3bin\_ucells.R - this builds a bin index for ocean colour, and populates this into the cache DB
+
+-   a daily task extracts the southern ocean bins for MODISA (SeaWiFS already done), and the db index provides a direct look up for bin number to sector/zone
+
+01 pre-extract data
+-------------------
+
+-   inst/workflow/01\_bulk\_aceecor - this extracts daily ICE and SST values to a faster file cache
+
+-   
 
 Install
 -------
@@ -48,7 +60,7 @@ lat.labs<- function(the.proj="polar"){
 lat.labs()
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-3-1.png)
+![](README_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-3-1.png)
 
 In unprojected form.
 
@@ -62,7 +74,7 @@ text(ll_labs$x, ll_labs$y, labels=labs$labels, cex=0.6)
 lat.labs("latlon")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-4-1.png)
+![](README_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-4-1.png)
 
 Metadata
 --------
@@ -107,4 +119,4 @@ ggplot(tab) + aes(x = long, y = lat, group = group, fill = SectorName) + scale_f
 geom_polypath() + theme(legend.text=element_text(size=6)) + guides(position = "bottom") + coord_equal()
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-6-1.png)
+![](README_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-6-1.png)
