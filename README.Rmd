@@ -18,8 +18,18 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Processing Workflow
 
-This is in-progress, current map of the entire process is here: https://github.com/AustralianAntarcticDivision/aceecostats/issues/14
+## 00 precalulate structures
 
+* inst/workflow/00_L3bin_ucells.R  - this builds a bin index for ocean colour, and populates this into the cache DB
+
+* a daily task extracts the southern ocean bins for MODISA (SeaWiFS already done), and the db index provides a direct look up for bin number to sector/zone
+
+
+## 01 pre-extract data
+
+* inst/workflow/01_bulk_aceecor - this extracts daily ICE and SST values to a faster file cache 
+
+* 
 
 ## Install
 

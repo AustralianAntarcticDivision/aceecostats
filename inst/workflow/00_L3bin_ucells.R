@@ -1,3 +1,6 @@
+## create the bin tables from L3 ocean colour, so we have them on hand
+## classified by cell_, area (km2), ID, SectorName and Zone
+
 library(sp)
 library(aceecostats)
 library(roc)
@@ -16,13 +19,14 @@ ucell$ID <- over(spTransform(xy, raster::projection(aes_zone)),
 
 ucell <- 
   ucell %>% filter(!is.na(ID)) %>% inner_join(aes_zone@data %>% select(-area_km2, -colour))
+library(dplyr)
 db <- dplyr::src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
 #db$con %>% db_drop_table(table='modis_bins') 
 dplyr::copy_to( db, ucell, "modis_bins", temporary = FALSE, 
                 index= list( "SectorName", "Zone"))
 
 
-
+library(roc)
 init <- initbin(NUMROWS = 2160)
 ## counts up from the south
 maxbin <- init$totbin/2
@@ -36,7 +40,6 @@ ucell$ID <- over(spTransform(xy, raster::projection(aes_zone)),
 ucell <- 
   ucell %>% filter(!is.na(ID)) %>% 
   inner_join(aes_zone@data %>% select(-area_km2, -colour))
-db <- dplyr::src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
 #db$con %>% db_drop_table(table='seawifs_bins') 
 dplyr::copy_to( db, ucell, "seawifs_bins", temporary = FALSE, 
                 index= list( "SectorName", "Zone"))
