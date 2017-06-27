@@ -1,12 +1,13 @@
 library(raadtools)
 library(roc)
 library(aceecostats)
-files <- chla_johnsonfiles(product = "MODISA")
-files$season_segs <- as.integer(factor(cumsum(c(0, abs(diff(unclass(factor(aes_season(files$date)))))))))
 
 
 dp <- "/home/acebulk/data"
 db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
+
+files <- chla_johnsonfiles(product = "MODISA")
+files$season_segs <- as.integer(factor(cumsum(c(0, abs(diff(unclass(factor(aes_season(files$date)))))))))
 
 ## season_year needs a formalization above (using date)
 ## collection list to store summary tables per season-i
@@ -45,16 +46,20 @@ for (idecade in seq_along(udecades)) {
 }
 
 
-## now "chl_density_tab" is the main table, and should be called "chl_raw_tab"
+## now "chl_raw_tab" is the main table (was "chl_density_tab") and
+## "chl_johnson_tab" is the main worker for shiny
 
-## we also need
+#db$con %>% db_drop_table(table='chl_johnson_tab')
 
-## this for the density plots (this should be called "chl_density_tab")
-#a <- tbl(db, "chl_density_tab")   %>%   filter(season == input$season) %>%  
-#  select(-date, -chla_nasa) %>% 
-#  left_join(tbl(db, "modis_bins") %>% #filter(ROWID %% 10 == 0) %>% 
-#              filter(SectorName == input$region, Zone == input$zone ) %>% 
-#              select(-area, -ID),  c("bin_num" = "cell_")) %>% 
-#  filter(!is.na(Zone), !is.na(SectorName))
+## modify the raw tab and write a copy for the density work
+a <- tbl(db, "chl_raw_tab")   %>%  #  filter(season == input$season) %>%  
+    select(-date, -chla_nasa) %>% 
+    left_join(tbl(db, "modis_bins") %>% #filter(ROWID %% 10 == 0) %>% 
+                #filter(SectorName == input$region, Zone == input$zone ) %>% 
+                select(-area, -ID),  c("bin_num" = "cell_")) %>% 
+    filter(!is.na(Zone), !is.na(SectorName))
 
-  #collect() %>% filter(!is.na(Zone), !is.na(SectorName))
+## is this enough?   YES IT IS
+b <- copy_to(db, collect(a, n = Inf), name = "chl_johnson_tab", 
+             indexes = list("bin_num", c("Zone", "SectorName", "season")), 
+             temporary = FALSE)
