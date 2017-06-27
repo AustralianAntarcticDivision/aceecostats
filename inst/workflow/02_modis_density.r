@@ -7,6 +7,7 @@ dp <- "/home/acebulk/data"
 db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
 
 files <- chla_johnsonfiles(product = "MODISA")
+
 files$season_segs <- as.integer(factor(cumsum(c(0, abs(diff(unclass(factor(aes_season(files$date)))))))))
 
 ## season_year needs a formalization above (using date)
