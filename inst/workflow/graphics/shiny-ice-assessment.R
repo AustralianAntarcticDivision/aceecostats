@@ -18,7 +18,9 @@ library(ggplot2)
 
 library(tidyr)
 library(DT)
-db <- src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
+#db <- src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
+dp <- "/home/acebulk/data"
+db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
 
 jet.colors <-
   colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan",
