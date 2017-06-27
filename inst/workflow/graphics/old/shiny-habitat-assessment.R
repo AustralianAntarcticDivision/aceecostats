@@ -43,6 +43,7 @@ epoch <- ISOdatetime(1970, 1, 1, 0, 0, 0, tz = "GMT")
 polymap <- sp::spTransform(aes_zone, projection(icegrid))
 polysstmap <- aes_zone_ll
 
+
 zone_names <- c("High-Latitude", "Mid-Latitude", "Continent")
 region_names <- (tbl(db, "ice_days_sparkline_tab_nozone") %>% select(SectorName) %>% distinct() %>% collect())$SectorName
 library(shiny)
@@ -68,9 +69,9 @@ ui <- function(request) {
       # Show plots, in tabs
       mainPanel(
         tabsetPanel(
-          tabPanel("Chlorophyll-a", plotOutput("chl_sparkPlot"), plotOutput("chl_density"), plotOutput("chl_mapPlot")), 
+        #  tabPanel("Chlorophyll-a", plotOutput("chl_sparkPlot"), plotOutput("chl_density"), plotOutput("chl_mapPlot")), 
           tabPanel("Sea ice days", plotOutput("ice_sparkPlot"), plotOutput("ice_density"), plotOutput("ice_mapPlot"), DT::dataTableOutput("icerat")), 
-          tabPanel("SST", plotOutput("sst_sparkPlot"), plotOutput("sst_density"), plotOutput("sstmin_mapPlot"), plotOutput("sstmax_mapPlot")), 
+      #    tabPanel("SST", plotOutput("sst_sparkPlot"), plotOutput("sst_density"), plotOutput("sstmin_mapPlot"), plotOutput("sstmax_mapPlot")), 
           tabPanel("Index map", plotOutput("polar_Map"), plotOutput("ll_Map")),
           tabPanel("Help", htmlOutput("helptext"))
         )
@@ -78,6 +79,8 @@ ui <- function(request) {
     )
   )
 }
+
+input <- list(region   = "Atlantic", zone = "High-Latitude", season = "Spring")
 # Define server logic required to attain wonderment
 server <- function(input, output) {
 
