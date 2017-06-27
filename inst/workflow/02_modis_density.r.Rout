@@ -22,9 +22,6 @@ Type 'q()' to quit R.
 > library(raadtools)
 Loading required package: raster
 Loading required package: sp
-Warning message:
-Installed Rcpp (0.12.11) different from Rcpp used to build dplyr (0.12.10).
-Please reinstall dplyr to avoid random crashes or undefined behavior. 
 > library(roc)
 Loading required package: dplyr
 
@@ -46,8 +43,9 @@ The following objects are masked from ‘package:base’:
 > files <- chla_johnsonfiles(product = "MODISA")
 > files$season_segs <- as.integer(factor(cumsum(c(0, abs(diff(unclass(factor(aes_season(files$date)))))))))
 > 
-> outf <- "/mnt/acebulk"
-> db <- dplyr::src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
+> ## RUNME
+> dp <- "/home/acebulk/data"
+> db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
 > 
 > ## season_year needs a formalization above (using date)
 > ## collection list to store summary tables per season-i
@@ -59,9 +57,10 @@ The following objects are masked from ‘package:base’:
 +                   season_year = files$season_segs)
 > 
 > icount <- 0
-> #db$con %>% db_drop_table(table='chl_density_tab')
+> #db$con %>% db_drop_table(table='chl_raw_tab')
 > udecades <- unique(levels(alldays$decade)[alldays$decade])
-> useasons <- c("Spring", "Summer")
+> useasons <- c("Spring", "Summer", "Autumn", "Winter")
+> 
 > for (idecade in seq_along(udecades)) {
 +   for (iseason in seq_along(useasons)) {
 +     ## identify every day uniquely badged by season_year labels
@@ -74,9 +73,9 @@ The following objects are masked from ‘package:base’:
 +     
 +     icount <- icount + 1
 +     if (icount == 1) {
-+       copy_to(db, a_dat, "chl_density_tab", temporary = FALSE, indexes = list("bin_num", "decade", "season"))
++       copy_to(db, a_dat, "chl_raw_tab", temporary = FALSE, indexes = list("bin_num", "decade", "season"))
 +     } else {
-+       db_insert_into( con = db$con, table = "chl_density_tab", values = a_dat)
++       db_insert_into( con = db$con, table = "chl_raw_tab", values = a_dat)
 +     }
 +     print(icount)
 +     rm(a_dat)
@@ -87,7 +86,26 @@ The following objects are masked from ‘package:base’:
 [1] 2
 [1] 3
 [1] 4
+[1] 5
+[1] 6
+[1] 7
+[1] 8
+> 
+> 
+> ## now "chl_density_tab" is the main table, and should be called "chl_raw_tab"
+> 
+> ## we also need
+> 
+> ## this for the density plots (this should be called "chl_density_tab")
+> #a <- tbl(db, "chl_density_tab")   %>%   filter(season == input$season) %>%  
+> #  select(-date, -chla_nasa) %>% 
+> #  left_join(tbl(db, "modis_bins") %>% #filter(ROWID %% 10 == 0) %>% 
+> #              filter(SectorName == input$region, Zone == input$zone ) %>% 
+> #              select(-area, -ID),  c("bin_num" = "cell_")) %>% 
+> #  filter(!is.na(Zone), !is.na(SectorName))
+> 
+>   #collect() %>% filter(!is.na(Zone), !is.na(SectorName))
 > 
 > proc.time()
     user   system  elapsed 
- 818.343  171.791 3737.355 
+1583.080  394.016 2162.664 
