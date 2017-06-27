@@ -1,24 +1,23 @@
-outf <- "/mnt/acebulk"
 
 ## SEA ICE DURATION
+
+library(dplyr)
+# RUNME
+dp <- "/home/acebulk/data"
+db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
 
 library(raster)
 library(tibble)
 library(dplyr)
 
 library(aceecostats)
-library(dplyr)
 
-outf <- "/mnt/acebulk"
-dp <- file.path(outf, "seaiceseason")
-db <- dplyr::src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
-
-gridarea <- readRDS(file.path(outf,"nsidc_south_area.rds"))/1e6
+## see data-raw
+gridarea <- readRDS(file.path(dp,"nsidc_south_area.rds"))/1e6
 ## put a tidy end to the series
 maxdate <- ISOdatetime(2017, 9, 1, 0, 0, 0, tz = "GMT")
 ## load previously calculated sea ice season metrics (seaiceson_southern_2016.Rmd)
 library(raster)
-outf <- "/mnt/acebulk"
 adv <- brick(file.path(dp, "south_advance.grd"))
 ret <- brick(file.path(dp, "south_retreat.grd"))
 duration <- ret - adv
@@ -27,15 +26,7 @@ duration[ret == 1] <- 365
 obj <- setZ(duration, ISOdatetime(seq(1979, length = nlayers(adv)), 2, 15, 0, 0, 0, tz = "GMT"))
 rm(ret, adv)
 
-# 
-# vars <- "seaice_duration_raster" 
-# obj <- brick(file.path(outf, sprintf("%s.grd", vars)))
-# obj <- setZ(obj, ISOdatetime(1979:2015, 2, 15, 0, 0, 0, tz = "GMT"))
-
 ras <- raster(obj)
-
-## unique integer from 0 to ~nrow(sf)/90 for each three month period
-#segs <- cumsum(c(0, abs(diff(unclass(factor(aes_season(getZ(obj))))))))
 
 listtab <- vector("list", nlayers(obj))
 dates <- as.POSIXct(getZ(obj))
@@ -44,10 +35,6 @@ for (i in seq_along(listtab)) {
   a_obj <- subset(obj, asub)
   
   tab <- tabit(a_obj) %>% rename(dur = val) %>% mutate(date = dates[asub[1]])  
-  #filter(dur > 0)
-  #tab$dur[tab$dur < 30] <- 365
-  # tab$max<- values(max(a_obj))[tab$cell_]
-  #  tab$mean <- values(mean(a_obj))[tab$cell_]
   listtab[[i]] <- tab
   print(i)
 }
@@ -64,36 +51,26 @@ ucell$ID <- over(spTransform(xyFromCell(ras, ucell$cell_, spatial=TRUE), project
 
 ## summ_tab is the mean values over time
 summ_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_zone@data[, c("ID", "SectorName", "Zone")])) %>% 
-  #mutate(Season = aes_season(date)) %>% 
-
   group_by(Zone, decade, SectorName,  date) %>%
   summarize(dur = mean(dur)) %>% 
   ungroup()
 
 
 summ_tab_nozone <- cell_tab %>% inner_join(ucell %>% inner_join(aes_zone@data[, c("ID", "SectorName", "Zone")])) %>% 
-  #mutate(Season = aes_season(date)) %>% 
-  
   group_by(decade, SectorName,  date) %>%
   summarize(dur = mean(dur)) %>% 
   ungroup()
-
-#cell_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_region@data[, c("index", "SectorName", "Zone", "Shelf")])) 
 
 ## raw_tab is all the cell values for density plots
 raw_tab <- cell_tab %>% inner_join(ucell %>% inner_join(aes_zone@data[, c("ID", "SectorName", "Zone")])) 
 
 raw_tab <- raw_tab %>% mutate(season = aes_season(date))
-db$con %>% db_drop_table(table='ice_density_tab')
-db$con %>% db_drop_table(table='ice_sparkline_tab')
-db$con %>% db_drop_table(table='ice_sparkline_tab_nozone')
+#db$con %>% db_drop_table(table='ice_density_tab')
+#db$con %>% db_drop_table(table='ice_sparkline_tab')
+#db$con %>% db_drop_table(table='ice_sparkline_tab_nozone')
 
 copy_to(db, raw_tab, "ice_density_tab", temporary = FALSE)
 copy_to(db, summ_tab, "ice_sparkline_tab", temporary = FALSE)
 copy_to(db, summ_tab_nozone, "ice_sparkline_tab_nozone", temporary = FALSE)
-# write_feather(cell_tab,  file.path(outf, "seaice_duration_cell_tab.feather"))
-# writeRaster(ras,        file.path(outf, "seaice_duration_raster.grd"))
-# write_feather(summ_tab, file.path(outf, "seaice_duration_summ_tab.feather"))
-# write_feather(raw_tab,  file.path(outf, "seaice_duration_raw_tab.feather"))
 
 

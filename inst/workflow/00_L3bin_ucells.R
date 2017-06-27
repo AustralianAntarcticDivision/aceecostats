@@ -4,6 +4,10 @@
 library(sp)
 library(aceecostats)
 library(roc)
+library(dplyr)
+## RUNME
+dp <- "/home/acebulk/data"
+db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
 
 
 init <- initbin(NUMROWS = 4320)
@@ -19,8 +23,6 @@ ucell$ID <- over(spTransform(xy, raster::projection(aes_zone)),
 
 ucell <- 
   ucell %>% filter(!is.na(ID)) %>% inner_join(aes_zone@data %>% select(-area_km2, -colour))
-library(dplyr)
-db <- dplyr::src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
 #db$con %>% db_drop_table(table='modis_bins') 
 dplyr::copy_to( db, ucell, "modis_bins", temporary = FALSE, 
                 index= list( "SectorName", "Zone"))

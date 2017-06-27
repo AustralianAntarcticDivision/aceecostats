@@ -6,11 +6,10 @@ library(raster)
 library(aceecostats)
 library(tibble)
 library(dplyr)
-library(feather)
 library(sf)
-outf <- "/mnt/acebulk"
+outf <- "/home/copy_aes/data"
 #db <- dplyr::src_sqlite(file.path(outf, "habitat_assessment_output.sqlite3"), create = TRUE)
-db <- dplyr::src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
+db <- dplyr::src_sqlite(file.path(outf, "habitat_assessment_output.sqlite3"))
 ## put a tidy end to the series
 maxdate <- ISOdatetime(2016, 12, 31, 23, 59, 59, tz = "GMT")
 aes_zone_data <- aes_zone@data[, c("ID", "SectorName", "Zone")]
@@ -27,9 +26,6 @@ gridarea <- area(ras) * if (isLonLat(ras)) 1 else (1/1e6)
 ## unique integer from 0 to ~nrow(sf)/90 for each three month period
 segs <- cumsum(c(0, abs(diff(unclass(factor(aes_season(getZ(obj))))))))
 
-## crux of density calcs, a decade and a season
-#asub <- aes_season(getZ(obj)) == "Summer" & as.integer(format(as.Date(getZ(obj)), "%Y")) < 1987
-#a_obj <- readAll(subset(obj, which(asub)))
 
 ## unique grid map cell number
 ucell <- tibble(cell_ = seq_len(ncell(ras)), area = values(gridarea))
@@ -68,6 +64,7 @@ sp_line <- bind_rows(sparkline_list)  %>% mutate(season = aes_season(season_year
 #db$con %>% db_drop_table(table='ice_minmaxmean_sparkline_tab')
 #dplyr::copy_to(db, sp_line, "ice_minmaxmean_sparkline_tab", temporary = FALSE)
 #saveRDS(sp_line, file.path(outf, "sparky_line.rds"))
+library(ggplot2)
 ggplot(sp_line %>% filter(Zone == "High-Latitude", season %in% c("Summer", "Winter")), 
        aes(x  = season_year,  y = val, colour = season)) +
   geom_line() + facet_wrap(~SectorName)

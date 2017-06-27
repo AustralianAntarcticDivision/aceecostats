@@ -8,9 +8,9 @@ library(tibble)
 library(dplyr)
 library(feather)
 library(sf)
-outf <- "/mnt/acebulk"
-#db <- dplyr::src_sqlite(file.path(outf, "habitat_assessment_output.sqlite3"), create = TRUE)
-db <- dplyr::src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
+## RUNME
+dp <- "/home/acebulk/data"
+db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
 ## put a tidy end to the series
 maxdate <- ISOdatetime(2016, 12, 31, 23, 59, 59, tz = "GMT")
 aes_zone_data <- aes_zone@data[, c("ID", "SectorName", "Zone")]

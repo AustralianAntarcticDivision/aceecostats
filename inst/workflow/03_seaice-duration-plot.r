@@ -6,17 +6,16 @@ library(feather)
 library(dplyr)
 library(ggplot2)
 ## local path to required cache files
-datapath <- "/mnt/acebulk"
+dp <- "/home/acebulk/data"
+library(dplyr)
+## RUNME
+db <- src_sqlite(filepath(dp, "habitat_assessment.sqlite3"))
 
 
 
 library(ggplot2)
 library(tidyr)
-dp <- "/mnt/acebulk/seaiceseason"
 
-##db file
-library(dplyr)
-db <- src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
 epoch <- ISOdatetime(1970, 1, 1, 0, 0, 0, tz = "GMT")
 ice_density_tab <- tbl(db, "ice_density_tab") %>% collect(n = Inf) %>% mutate(date = date + epoch)  %>% 
   filter(dur < 365) %>% 
