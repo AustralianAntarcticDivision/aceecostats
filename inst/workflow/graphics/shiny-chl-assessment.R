@@ -72,7 +72,9 @@ ui <- function(request) {
         # selectInput("toggle", "Flip map Polar<->Plate Carrée"),
        # selectInput("palette", "Palette for map", choices = c("chl", "sst", "blues", "ice", "viridis", "inferno", "festival", "baser")), 
       #  selectInput("n_colours", "Number of colours for map", choices = c(3, 7, 11, 13, 25, 50, 100), selected = 11), 
-        checkboxInput("coord1", "1:1 aspect ratio? (\"no\" means \"better map layout\")", FALSE)
+        checkboxInput("coord1", "1:1 aspect ratio? (\"no\" means \"better map layout\")", FALSE), 
+      
+      checkboxInput("dateline", "merge Pacific at dateline?", TRUE)
       ),
       # Show plots, in tabs
       mainPanel(
@@ -116,19 +118,12 @@ server <- function(input, output) {
     gspark
   })
   
-  output$sst_density <- renderPlot({
-    dens <- get_sst_density()
-    dens <- dens %>% gather(measure, sst,  -decade, -cell_, -count,   -season, -area, -SectorName, -Zone )
-    dens <- dens %>% filter(sst >= input$min_sst, sst <= input$max_sst)
-    if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
-    ggplot(dens, aes(sst, group = decade, weight = area, colour = decade)) + geom_density()  + facet_wrap(measure~Zone) 
-    
-  })
   output$chl_density <- renderPlot({
     dens <- get_chl_density()
     #dens <- dens %>% gather(measure, chla,  -decade, -bin_num,   -season,  -SectorName, -Zone )
     if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
-    ggplot(dens, aes(chla_johnson, group = decade,  colour = decade)) + geom_density()  + 
+    
+    ggplot(dens, aes(chla_johnson, group = decade,  colour = decade, weight = area)) + geom_density()  + 
       facet_wrap(~Zone)  + 
       xlim(0, 5)
     
@@ -142,7 +137,11 @@ server <- function(input, output) {
     #dens <- dens %>% group_by(decade, bin_num, SectorName, Zone) %>% summarize(mean = mean(chla_johnson))
     if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
     dens[c("x", "y")] <- as.data.frame(roc::bin2lonlat(dens$bin_num, 4320))
+    
     #dens1 <- sample_n(dens, nrow(dens)/1e3)
+    if (input$region == "WestPacific"   & input$dateline) {
+      dens <- mutate(dens, x = ifelse(x < 0, x + 360, x))
+    }
     gmap <- ggplot(dens, aes(x, y, colour = chla_johnson)) + 
       geom_point(pch = ".") + facet_wrap(~decade) + 
       #scale_fill_gradientn(colours = colour_pal) + 
@@ -177,6 +176,7 @@ server <- function(input, output) {
       filter(season == input$season, 
            #  Zone == input$zone, 
              SectorName == input$region) %>% 
+      mutate(area = (4600 * 4600)/1e6) %>% 
       collect(n = Inf)
    
     
@@ -184,8 +184,13 @@ server <- function(input, output) {
     
   
   get_sst_map <- reactive({
-    fortify(subset(polysstmap, SectorName == input$region & Zone == input$zone))
-  })
+    tab <- fortify(subset(polysstmap, SectorName == input$region & Zone == input$zone))
+
+    if (input$region == "WestPacific"  & input$dateline) {
+      tab <- tab %>% mutate(long = ifelse(long < 0, long + 360, long))
+    }
+    tab
+      })
   
   ## UTILS
   cpal <- reactive({

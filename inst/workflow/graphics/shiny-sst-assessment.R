@@ -72,7 +72,8 @@ ui <- function(request) {
         # selectInput("toggle", "Flip map Polar<->Plate Carrée"),
         selectInput("palette", "Palette for map", choices = c("sst", "blues", "ice", "viridis", "inferno", "festival", "baser")), 
         selectInput("n_colours", "Number of colours for map", choices = c(3, 7, 11, 13, 25, 50, 100), selected = 11), 
-        checkboxInput("coord1", "1:1 aspect ratio?", TRUE)
+        checkboxInput("coord1", "1:1 aspect ratio?", TRUE), 
+        checkboxInput("dateline", "merge Pacific at dateline?", TRUE)
       ),
       # Show plots, in tabs
       mainPanel(
@@ -121,34 +122,9 @@ server <- function(input, output) {
     dens <- dens %>% gather(measure, sst,  -decade, -cell_, -count,   -season, -area, -SectorName, -Zone )
     dens <- dens %>% filter(sst >= input$min_sst, sst <= input$max_sst)
     if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
+  
     ggplot(dens, aes(sst, group = decade, weight = area, colour = decade)) + geom_density()  + facet_wrap(measure~Zone) 
     
-  })
-  output$chl_density <- renderPlot({
-    dens <- get_chl_density()
-    #dens <- dens %>% gather(measure, chla,  -decade, -bin_num,   -season,  -SectorName, -Zone )
-    if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
-    ggplot(dens, aes(chla_johnson, group = decade,  colour = decade)) + geom_density()  + facet_wrap(~Zone)  + 
-      xlim(0, 5)
-    
-  })
-  # MAPS
-  output$chl_mapPlot <- renderPlot({
-    colour_pal <- palr::chlPal(palette = TRUE)
-    scl <- function(x) {rng <- range(x, na.rm = T); (x - rng[1])/diff(rng)}
-    sstmap <- get_sst_map()
-    dens <- get_chl_density()
-    #dens <- dens %>% group_by(decade, bin_num, SectorName, Zone) %>% summarize(mean = mean(chla_johnson))
-    if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
-    dens[c("x", "y")] <- as.data.frame(roc::bin2lonlat(dens$bin_num, 4320))
-    #dens1 <- sample_n(dens, nrow(dens)/1e3)
-    gmap <- ggplot(dens, aes(x, y, colour = chla_johnson)) + 
-      geom_point(pch = ".") + facet_wrap(~decade) + 
-      #scale_fill_gradientn(colours = colour_pal) + 
-      scale_colour_gradientn(values = scl(head(colour_pal$breaks, -1)), colours = colour_pal$cols) + 
-      geom_path(data = sstmap, aes(x = long, y = lat, group = group, colour = NULL))
-    if (input$coord1) gmap <- gmap + coord_equal()
-    gmap
   })
   output$sstmin_mapPlot <- renderPlot({
     colour_pal <- cpal()
@@ -158,6 +134,9 @@ server <- function(input, output) {
     dens <- dens %>% group_by(decade, cell_) %>% summarize(min = mean(min))
     if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
     dens[c("x", "y")] <- as.data.frame(raster::xyFromCell(sstgrid, dens$cell_))
+    if (input$region == "WestPacific" & input$dateline) {
+      dens <- mutate(dens, x = ifelse(x < 0, x + 360, x))
+    }
     gmap <- ggplot(dens, aes(x, y, fill = min)) + geom_raster() + facet_wrap(~decade) + 
       scale_fill_gradientn(colours = colour_pal) + 
       geom_path(data = sstmap, aes(x = long, y = lat, group = group, fill = NULL))
@@ -172,6 +151,9 @@ server <- function(input, output) {
     if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
     dens <- dens %>% group_by(decade, cell_) %>% summarize(max = mean(max))
     dens[c("x", "y")] <- as.data.frame(raster::xyFromCell(sstgrid, dens$cell_))
+    if (input$region == "WestPacific"   & input$dateline) {
+      dens <- mutate(dens, x = ifelse(x < 0, x + 360, x))
+    }
     gmap <- ggplot(dens, aes(x, y, fill = max)) + geom_raster() + facet_wrap(~decade) + 
       scale_fill_gradientn(colours = colour_pal) + 
       geom_path(data = sstmap, aes(x = long, y = lat, group = group, fill = NULL))
@@ -214,21 +196,17 @@ server <- function(input, output) {
       collect(n = Inf) 
   })
   
-  get_chl_density <- reactive({
-    # tbl(db, "chl_density_tab")   %>% filter(season == input$season) %>%  
-    #   left_join(tbl(db, "modis_bins"),  c("bin_num" = "cell_")) %>% collect(n = Inf) 
-     tbl(db, "chl_density_tab")   %>% filter(ROWID %% 10 == 0) %>% 
-      filter(season == input$season) %>%  
-      select(-date, -chla_nasa) %>% 
-      left_join(tbl(db, "modis_bins") %>% #filter(ROWID %% 10 == 0) %>% 
-                  filter(SectorName == input$region, Zone == input$zone ) %>% select(-area, -ID),  c("bin_num" = "cell_")) %>% 
-      collect() %>% filter(!is.na(Zone), !is.na(SectorName))
-        
-    })
+
     
   
   get_sst_map <- reactive({
-    fortify(subset(polysstmap, SectorName == input$region & Zone == input$zone))
+  
+    tab <- fortify(subset(polysstmap, SectorName == input$region & Zone == input$zone))
+    if (input$region == "WestPacific"  & input$dateline) {
+     tab <- tab %>% mutate(long = ifelse(long < 0, long + 360, long))
+    }
+    
+    tab
   })
   
   ## UTILS

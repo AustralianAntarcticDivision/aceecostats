@@ -134,39 +134,6 @@ server <- function(input, output) {
      if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
     ggplot(dens, aes(days, group = decade, weight = area, colour = decade)) + geom_density()  + facet_wrap(~Zone) 
   })
-  output$sst_density <- renderPlot({
-    dens <- get_sst_density()
-    dens <- dens %>% gather(measure, sst,  -decade, -cell_, -count,   -season, -area, -SectorName, -Zone )
-    if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
-    ggplot(dens, aes(sst, group = decade, weight = area, colour = decade)) + geom_density()  + facet_wrap(measure~Zone) 
-    
-  })
-  output$chl_density <- renderPlot({
-    dens <- get_chl_density()
-    #dens <- dens %>% gather(measure, chla,  -decade, -bin_num,   -season,  -SectorName, -Zone )
-    if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
-    ggplot(dens, aes(chla_johnson, group = decade,  colour = decade)) + geom_density()  + facet_wrap(~Zone)  + 
-      xlim(0, 5)
-    
-  })
-  # MAPS
-  output$chl_mapPlot <- renderPlot({
-    colour_pal <- palr::chlPal(palette = TRUE)
-    scl <- function(x) {rng <- range(x, na.rm = T); (x - rng[1])/diff(rng)}
-    sstmap <- get_sst_map()
-    dens <- get_chl_density()
-    #dens <- dens %>% group_by(decade, bin_num, SectorName, Zone) %>% summarize(mean = mean(chla_johnson))
-    if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
-    dens[c("x", "y")] <- as.data.frame(roc::bin2lonlat(dens$bin_num, 4320))
-    #dens1 <- sample_n(dens, nrow(dens)/1e3)
-    gmap <- ggplot(dens, aes(x, y, colour = chla_johnson)) + 
-      geom_point(pch = ".") + facet_wrap(~decade) + 
-      #scale_fill_gradientn(colours = colour_pal) + 
-      scale_colour_gradientn(values = scl(head(colour_pal$breaks, -1)), colours = colour_pal$cols) + 
-      geom_path(data = sstmap, aes(x = long, y = lat, group = group, colour = NULL))
-    if (input$coord1) gmap <- gmap + coord_equal()
-    gmap
-  })
   output$ice_mapPlot <- renderPlot({
     colour_pal <- cpal()
     pmap <- subset(polymap, SectorName == input$region & Zone == input$zone)
@@ -182,33 +149,7 @@ server <- function(input, output) {
     if (input$coord1) gmap <- gmap + coord_equal()
     gmap
   })
-  output$sstmin_mapPlot <- renderPlot({
-    colour_pal <- cpal()
-    sstmap <- get_sst_map()
-    dens <- get_sst_density()
-    dens <- dens %>% group_by(decade, cell_) %>% summarize(min = mean(min))
-    if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
-    dens[c("x", "y")] <- as.data.frame(raster::xyFromCell(sstgrid, dens$cell_))
-    gmap <- ggplot(dens, aes(x, y, fill = min)) + geom_raster() + facet_wrap(~decade) + 
-      scale_fill_gradientn(colours = colour_pal) + 
-      geom_path(data = sstmap, aes(x = long, y = lat, group = group, fill = NULL))
-    if (input$coord1) gmap <- gmap + coord_equal()
-    gmap
-  })
-  output$sstmax_mapPlot <- renderPlot({
-    colour_pal <- cpal()
-    sstmap <- get_sst_map()
-    dens <- get_sst_density()
-    if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
-    dens <- dens %>% group_by(decade, cell_) %>% summarize(max = mean(max))
-    dens[c("x", "y")] <- as.data.frame(raster::xyFromCell(sstgrid, dens$cell_))
-    gmap <- ggplot(dens, aes(x, y, fill = max)) + geom_raster() + facet_wrap(~decade) + 
-      scale_fill_gradientn(colours = colour_pal) + 
-      geom_path(data = sstmap, aes(x = long, y = lat, group = group, fill = NULL))
-    if (input$coord1) gmap <- gmap + coord_equal()
-    gmap
-  })
-
+ 
   ## INDEX MAPS
   output$polar_Map <- renderPlot({
     labs <- data.frame(x= c(112406,4488211,-1734264,-4785284), y=c(4271428,-224812,-3958297,-104377), labels=c("Atlantic","Indian", "West Pacific", "East Pacific"))
