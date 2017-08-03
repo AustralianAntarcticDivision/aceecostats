@@ -68,6 +68,7 @@ ui <- function(request) {
         selectInput("zone", "Zone ", zone_names), 
         numericInput("min_days", "Density Min day", value = 1, min = 0, max = 31),
         numericInput("max_days", "Density Max day", value = 366, min = 300, max = 366),
+        numericInput("intervals", "Break", value = 128, min = 1, max = 365),
         #selectInput("season", "Season (ignored for ice)", c("Spring", "Summer", "Autumn", "Winter")), 
         #checkboxInput("interactive", "interactive? (be patient)", FALSE), 
         # selectInput("toggle", "Flip map Polar<->Plate Carrée"),
@@ -80,7 +81,7 @@ ui <- function(request) {
         tabsetPanel(
         #  tabPanel("Chlorophyll-a", plotOutput("chl_sparkPlot"), plotOutput("chl_density"), plotOutput("chl_mapPlot")), 
           tabPanel("Sea ice days", plotOutput("ice_sparkPlot"), plotOutput("ice_density"), plotOutput("ice_mapPlot"), DT::dataTableOutput("icerat")), 
-      #    tabPanel("SST", plotOutput("sst_sparkPlot"), plotOutput("sst_density"), plotOutput("sstmin_mapPlot"), plotOutput("sstmax_mapPlot")), 
+          tabPanel("Quants", plotOutput("quant_densityPlot"), plotOutput("quant_mapPlot")),
           tabPanel("Index map", plotOutput("polar_Map"), plotOutput("ll_Map")),
           tabPanel("Help", htmlOutput("helptext"))
         )
@@ -94,16 +95,6 @@ input <- list(min_days = 1, max_days = 366, region   = "Atlantic", zone = "High-
 server <- function(input, output) {
 
   ## SPARKY
-  output$chl_sparkPlot <- renderPlot({
-    x    <- tbl(db, "chl_sparkline_tab") %>% 
-      filter(SectorName == input$region, Zone == input$zone, season == input$season) %>% collect(n = Inf) %>% 
-      mutate(date = season_year + epoch) %>% gather(measure, chla, -date, -SectorName, -Zone, -season, -season_year)
-    
-    
-    gspark <-  ggplot(x, aes(x = date, y = chla, group = measure, colour = measure)) + geom_line() #+ facet_wrap(~Season)
-    #if (input$interactive)    ggplotly(gspark) else gspark
-    gspark
-  })
   output$ice_sparkPlot <- renderPlot({
     x    <- tbl(db, "ice_days_sparkline_tab_nozone") %>% 
       filter(SectorName == input$region) %>% collect(n = Inf) %>% 
@@ -114,25 +105,19 @@ server <- function(input, output) {
     #if (input$interactive)    ggplotly(gspark) else gspark
     gspark
   })
-  output$sst_sparkPlot <- renderPlot({
-    # generate bins based on input$bins from ui.R
-    x    <- tbl(db, "sst_sparkline_tab") %>% 
-      filter(SectorName == input$region, Zone == input$zone) %>% collect(n = Inf) %>% 
-      mutate(date = season_year * 24 * 3600 + epoch, Season = aes_season(date)) %>% 
-      gather(measure, sst, -SectorName, -Zone, -season_year, -date, -Season) %>% 
-      mutate(measure = gsub("mean", "", measure))
-    if (nrow(x) < 1) return(ggplot() + ggtitle("no data"))
-    #bins <- seq(min(x), max(x), length.out = input$bins + 1)
-    gspark <-  ggplot(x, aes(x = date, y = sst, group = measure, colour = measure)) + geom_line() + facet_wrap(~Season)
-    #if (input$interactive)    ggplotly(gspark) else gspark
-    gspark
-  })
-  
   ## DENSITY
   output$ice_density <- renderPlot({
    dens <- get_ice_density()
      if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
     ggplot(dens, aes(days, group = decade, weight = area, colour = decade)) + geom_density()  + facet_wrap(~Zone) 
+  })
+  output$quant_densityPlot <- renderPlot({
+    dens <- get_ice_density()
+    intervals <- input$intervals
+    
+    if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
+    ggplot(dens, aes(days, group = decade, weight = area, colour = decade)) + 
+      geom_density()  + facet_wrap(~Zone) + geom_vline(xintercept = intervals)
   })
   output$ice_mapPlot <- renderPlot({
     colour_pal <- cpal()
@@ -145,6 +130,22 @@ server <- function(input, output) {
     dens[c("x", "y")] <- as.data.frame(raster::xyFromCell(icegrid, dens$cell_))
     gmap <- ggplot(dens, aes(x, y, fill = days)) + geom_raster() + facet_wrap(~decade)  + 
       scale_fill_gradientn(colours = colour_pal) + 
+      geom_path(data = fortify(pmap), aes(x = long, y = lat, group = group, fill = NULL))
+    if (input$coord1) gmap <- gmap + coord_equal()
+    gmap
+  })
+  
+  output$quant_mapPlot <- renderPlot({
+    colour_pal <- cpal()
+    pmap <- subset(polymap, SectorName == input$region & Zone == input$zone)
+    dens <- get_ice_density()  
+    if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
+    
+    
+    dens <- dens %>% group_by(decade, cell_) %>% summarize(days = mean(days))
+    dens[c("x", "y")] <- as.data.frame(raster::xyFromCell(icegrid, dens$cell_))
+    gmap <- ggplot(dens, aes(x, y, fill = days)) + geom_raster() + facet_wrap(~decade)  + 
+      scale_fill_gradientn(colours = colour_pal) + geom_raster() + stat_contour(colour = "black", aes(z = days), breaks = input$intervals) + 
       geom_path(data = fortify(pmap), aes(x = long, y = lat, group = group, fill = NULL))
     if (input$coord1) gmap <- gmap + coord_equal()
     gmap
