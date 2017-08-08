@@ -50,14 +50,14 @@ for (idecade in seq_along(udecades)) {
 ## now "chl_raw_tab" is the main table (was "chl_density_tab") and
 ## "chl_johnson_tab" is the main worker for shiny
 
-#db$con %>% db_drop_table(table='chl_johnson_tab')
+db$con %>% db_drop_table(table='chl_johnson_tab')
 
 ## modify the raw tab and write a copy for the density work
 a <- tbl(db, "chl_raw_tab")   %>%  #  filter(season == input$season) %>%  
-    select(-date, -chla_nasa) %>% 
+    dplyr::select(-date, -chla_nasa) %>% 
     left_join(tbl(db, "modis_bins") %>% #filter(ROWID %% 10 == 0) %>% 
                 #filter(SectorName == input$region, Zone == input$zone ) %>% 
-                select(-area, -ID),  c("bin_num" = "cell_")) %>% 
+                dplyr::select(-area, -ID),  c("bin_num" = "cell_")) %>% 
     filter(!is.na(Zone), !is.na(SectorName))
 
 ## is this enough?   YES IT IS
