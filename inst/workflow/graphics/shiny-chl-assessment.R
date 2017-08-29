@@ -7,8 +7,7 @@ file.copy(appfile,  srvfile, overwrite = TRUE)
 }
 
 ## test mode
-input <- structure(list(region = "Atlantic", zone = "Mid-Latitude", season = "Summer"), .Names = c("region", 
-                                                                                          "zone", "season"))
+input <- list(region = "Atlantic", zone = "Mid-Latitude", season = "Summer")
 input$coord1 <- TRUE
 ## preparation
 library(aceecostats)
@@ -51,7 +50,7 @@ polysstmap <- aes_zone_ll
 
 
 zone_names <- c("High-Latitude", "Mid-Latitude", "Continent")
-region_names <- (tbl(db, "ice_days_sparkline_tab_nozone") %>% select(SectorName) %>% distinct() %>% collect())$SectorName
+region_names <- (tbl(db, "ice_days_sparkline_tab_nozone") %>% dplyr::select(SectorName) %>% distinct() %>% collect())$SectorName
 library(shiny)
 #rm(input)
 # Define UI for application that conquers the universe
@@ -67,6 +66,8 @@ ui <- function(request) {
         selectInput("zone", "Zone ", zone_names), 
         numericInput("min_chl", "Density Min chl (mg/m3)", value = 0, min = 0, max = 1000),
         numericInput("max_chl", "Density Max chl (mg/m3)", value = 30, min = 0, max = 1000),
+        textInput("intervals", "CHL mg/m3 Interval Breaks", value = "0.02, 0.27, 0.34, 0.5, 30"),
+        
         selectInput("season", "Season", c("Summer", "Winter")), 
         #checkboxInput("interactive", "interactive? (be patient)", FALSE), 
         # selectInput("toggle", "Flip map Polar<->Plate Carrée"),
@@ -93,6 +94,10 @@ ui <- function(request) {
 # Define server logic required to attain wonderment
 server <- function(input, output) {
 
+  get_intervals <- reactive({
+    ish <- input$intervals
+     as.numeric(unlist(strsplit(ish, ",")))
+  })
   ## SPARKY
   output$chl_sparkPlot <- renderPlot({
     x    <- tbl(db, "chl_sparkline_tab") %>% 
@@ -122,9 +127,9 @@ server <- function(input, output) {
     dens <- get_chl_density()
     #dens <- dens %>% gather(measure, chla,  -decade, -bin_num,   -season,  -SectorName, -Zone )
     if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
-    
+    breaks <- get_intervals()
     ggplot(dens, aes(chla_johnson, group = decade,  colour = decade, weight = area)) + geom_density()  + 
-      facet_wrap(~Zone)  + 
+      facet_wrap(~Zone)  + geom_vline(xintercept = breaks) + 
       xlim(0, 5)
     
   })
@@ -133,6 +138,7 @@ server <- function(input, output) {
     colour_pal <- palr::chlPal(palette = TRUE)
     scl <- function(x) {rng <- range(x, na.rm = T); (x - rng[1])/diff(rng)}
     sstmap <- get_sst_map()
+    breaks <- get_intervals()
     dens <- get_chl_density() %>% filter(Zone == input$zone)
     #dens <- dens %>% group_by(decade, bin_num, SectorName, Zone) %>% summarize(mean = mean(chla_johnson))
     if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))

@@ -51,7 +51,7 @@ polysstmap <- aes_zone_ll
 
 
 zone_names <- c("High-Latitude", "Mid-Latitude", "Continent")
-region_names <- (tbl(db, "ice_days_sparkline_tab_nozone") %>% select(SectorName) %>% distinct() %>% collect())$SectorName
+region_names <- (tbl(db, "ice_days_sparkline_tab_nozone") %>% dplyr::select(SectorName) %>% distinct() %>% collect())$SectorName
 library(shiny)
 rm(input)
 # Define UI for application that conquers the universe
@@ -67,7 +67,9 @@ ui <- function(request) {
         selectInput("zone", "Zone ", zone_names), 
         numericInput("min_sst", "Density Min sst (C)", value = -1.8, min = -1.8, max = 0),
         numericInput("max_sst", "Density Max sst (C)", value = 29, min = 20, max = 29),
-        selectInput("season", "Season", c("Summer", "Winter")), 
+        textInput("intervals", "Interval Breaks", value = "0,2,8"),
+        
+          selectInput("season", "Season", c("Summer", "Winter")), 
         #checkboxInput("interactive", "interactive? (be patient)", FALSE), 
         # selectInput("toggle", "Flip map Polar<->Plate Carrée"),
         selectInput("palette", "Palette for map", choices = c("sst", "blues", "ice", "viridis", "inferno", "festival", "baser")), 
@@ -92,17 +94,15 @@ ui <- function(request) {
 # Define server logic required to attain wonderment
 server <- function(input, output) {
 
-  ## SPARKY
-  output$chl_sparkPlot <- renderPlot({
-    x    <- tbl(db, "chl_sparkline_tab") %>% 
-      filter(SectorName == input$region, Zone == input$zone, season == input$season) %>% collect(n = Inf) %>% 
-      mutate(date = season_year + epoch) %>% gather(measure, chla, -date, -SectorName, -Zone, -season, -season_year)
-    
-    
-    gspark <-  ggplot(x, aes(x = date, y = chla, group = measure, colour = measure)) + geom_line() #+ facet_wrap(~Season)
-    #if (input$interactive)    ggplotly(gspark) else gspark
-    gspark
+  
+  get_intervals <- reactive({
+    ish <- input$intervals
+    as.numeric(unlist(strsplit(ish, ",")))
   })
+  
+
+  ## SPARKY
+
   output$sst_sparkPlot <- renderPlot({
     # generate bins based on input$bins from ui.R
     x    <- tbl(db, "sst_sparkline_tab") %>% 
@@ -122,14 +122,15 @@ server <- function(input, output) {
     dens <- dens %>% gather(measure, sst,  -decade, -cell_, -count,   -season, -area, -SectorName, -Zone )
     dens <- dens %>% filter(sst >= input$min_sst, sst <= input$max_sst)
     if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
-  
-    ggplot(dens, aes(sst, group = decade, weight = area, colour = decade)) + geom_density()  + facet_wrap(measure~Zone) 
+  breaks <- get_intervals()
+    ggplot(dens, aes(sst, group = decade, weight = area, colour = decade)) + geom_density()  + facet_wrap(measure~Zone)  +      geom_vline(xintercept = breaks)
     
   })
   output$sstmin_mapPlot <- renderPlot({
     colour_pal <- cpal()
     sstmap <- get_sst_map()
     dens <- get_sst_density()
+    breaks <- get_intervals()
     dens <- dens %>% filter(min >= input$min_sst)
     dens <- dens %>% group_by(decade, cell_) %>% summarize(min = mean(min))
     if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
@@ -137,7 +138,7 @@ server <- function(input, output) {
     if (input$region == "WestPacific" & input$dateline) {
       dens <- mutate(dens, x = ifelse(x < 0, x + 360, x))
     }
-    gmap <- ggplot(dens, aes(x, y, fill = min)) + geom_raster() + facet_wrap(~decade) + 
+    gmap <- ggplot(dens, aes(x, y, fill = min)) + geom_raster() + facet_wrap(~decade) + stat_contour(colour = "black", aes(z = min), breaks = breaks) + 
       scale_fill_gradientn(colours = colour_pal) + 
       geom_path(data = sstmap, aes(x = long, y = lat, group = group, fill = NULL))
     if (input$coord1) gmap <- gmap + coord_equal()
@@ -148,13 +149,14 @@ server <- function(input, output) {
     sstmap <- get_sst_map()
     dens <- get_sst_density()
     dens <- dens %>% filter(max <= input$max_sst)
+    breaks <- get_intervals()
     if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
     dens <- dens %>% group_by(decade, cell_) %>% summarize(max = mean(max))
     dens[c("x", "y")] <- as.data.frame(raster::xyFromCell(sstgrid, dens$cell_))
     if (input$region == "WestPacific"   & input$dateline) {
       dens <- mutate(dens, x = ifelse(x < 0, x + 360, x))
     }
-    gmap <- ggplot(dens, aes(x, y, fill = max)) + geom_raster() + facet_wrap(~decade) + 
+    gmap <- ggplot(dens, aes(x, y, fill = max)) + geom_raster() + facet_wrap(~decade) + stat_contour(colour = "black", aes(z = max), breaks = breaks) + 
       scale_fill_gradientn(colours = colour_pal) + 
       geom_path(data = sstmap, aes(x = long, y = lat, group = group, fill = NULL))
     if (input$coord1) gmap <- gmap + coord_equal()

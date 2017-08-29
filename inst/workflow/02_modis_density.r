@@ -50,7 +50,7 @@ for (idecade in seq_along(udecades)) {
 ## now "chl_raw_tab" is the main table (was "chl_density_tab") and
 ## "chl_johnson_tab" is the main worker for shiny
 
-db$con %>% db_drop_table(table='chl_johnson_tab')
+#db$con %>% db_drop_table(table='chl_johnson_tab')
 
 ## modify the raw tab and write a copy for the density work
 a <- tbl(db, "chl_raw_tab")   %>%  #  filter(season == input$season) %>%  
@@ -64,3 +64,18 @@ a <- tbl(db, "chl_raw_tab")   %>%  #  filter(season == input$season) %>%
 b <- copy_to(db, collect(a, n = Inf), name = "chl_johnson_tab", 
              indexes = list("bin_num", c("Zone", "SectorName", "season")), 
              temporary = FALSE)
+
+
+a <- tbl(db, "chl_johnson_tab")
+r <- raster(raadtools::readice())
+decs <- c("1998-2007", "2007-2017")
+seas <- c("Summer", "Autumn", "Winter", "Spring")
+for (i in decs) {
+ for (j in seas) {
+   tab <- a %>% dplyr::filter(season == j, decade == i) %>% collect(n = Inf)
+   tab$cell <- cellFromXY(r, rgdal::project(as.matrix(tibble::as_tibble(roc::bin2lonlat(tab$bin_num, 4320))), projection(r)))
+   tab <- tab %>% group_by(cell) %>% summarize(chl = mean(chla_johnson))
+   tab <- tab %>% filter(!is.na(cell))
+   r[tab$cell] <- tab$chl
+}
+}   
