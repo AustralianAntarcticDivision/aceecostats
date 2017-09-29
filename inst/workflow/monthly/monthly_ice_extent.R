@@ -60,7 +60,7 @@ library(dplyr)
 
 winter_extent <- monthly_extent %>% dplyr::filter(month %in% c(7, 8)) %>% 
   group_by(year) %>% 
-  summarize(area = sum(area), count = n())
+  summarize(area = sum(area)/2, count = n())
 
 write.csv(winter_extent, file = "winter_extent.csv", row.names = FALSE)
 
