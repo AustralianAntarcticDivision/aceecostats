@@ -19,7 +19,8 @@ aes_zone_data <- aes_zone@data[, c("ID", "SectorName", "Zone")]
 aes_zone_data$Zone[aes_zone_data$Zone == "Continent"] <- "High-Latitude"
 
 
-obj <- brick(file.path(outf, "data", sprintf("%s.grd", "sst")))
+obj <- brick(file.path(dp, sprintf("%s.grd", "sst")))
+projection(obj) <- "+init=epsg:4326"
 dates <- as.Date(getZ(obj), tz = "GMT")
 ras <- raster(obj)
 gridarea <- area(ras) * if (isLonLat(ras)) 1 else (1/1e6)
@@ -51,13 +52,14 @@ for (i in seq_along(sparkline_list)) {
   ## aggregate min/max for 90 days per cell
   minval_map <- min(a_obj, na.rm = TRUE)
   maxval_map <- max(a_obj, na.rm = TRUE)
-  
+  medval_map <- calc(a_obj, median, na.rm = TRUE)
   ## mean of the min/max by region
   sparkys <-  tabit(maxval_map) %>% rename(maxval = val)%>% 
     inner_join(tabit(minval_map) %>% rename(minval = val)) %>% 
+    inner_join(tabit(medval_map) %>% rename(medval = val)) %>%
     inner_join(ucell %>% inner_join(aes_zone_data)) %>% 
     group_by(SectorName, Zone) %>% 
-    summarize(meanmin = mean(minval), meanmax = mean(maxval)) %>% 
+    summarize(meanmin = mean(minval), meanmax = mean(maxval), meanmed = mean(medval)) %>% 
     mutate(season_year = dates[asub[1]])
   sparkline_list[[i]] <- sparkys
   print(i)
@@ -108,12 +110,15 @@ library(purrr)
       ## aggregate min/max for 90 days per cell
       minval_map <- min(a_obj, na.rm = TRUE)
       maxval_map <- max(a_obj, na.rm = TRUE)
+      medval_map <- calc(a_obj, median, na.rm = TRUE)
+      
       #  skip_on(c("autumn", "spring")) {
       
       ## all of the min/max grid values by region
       tab <- tabit(minval_map) 
       tab <- tab %>% rename(min = val) %>% mutate(date = yeardays$date[1]) 
       tab$max<- values(maxval_map)[tab$cell_]
+      tab$med <- values(medval_map)[tab$cell_]
       tab$count <- values(calc(!is.na(a_obj), sum, na.rm = TRUE))[tab$cell_]
 
       list_of_seasons[[iyear]] <- tab
@@ -123,7 +128,7 @@ library(purrr)
     ## big tab (need labels back on decade)
     tab <- bind_rows(list_of_seasons) %>% mutate(decade = decade_maker(date))
     summ <- tab %>% group_by(decade, cell_) %>% 
-      summarize(min = mean(min), max  = mean(max), count = sum(count)) %>% 
+      summarize(min = mean(min), max  = mean(max), med = mean(med), count = sum(count)) %>% 
       mutate(season = useasons[iseason])
     icount <- icount + 1
    big_tab[[icount]] <- summ
@@ -136,6 +141,6 @@ big_tab$area <- raster::extract(gridarea, big_tab$cell_)
 
 big_tab <- big_tab %>% left_join(ucell %>% select(-area), "cell_") %>% inner_join(aes_zone_data) %>% select(-ID)
 
-db$con %>% db_drop_table(table='sst_density_tab')
+#db$con %>% db_drop_table(table='sst_density_tab')
 
 copy_to(db, big_tab, "sst_density_tab", temporary = FALSE)
