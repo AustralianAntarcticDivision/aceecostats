@@ -71,8 +71,11 @@ a$x <- x_coord(gridcol(a$cell25, chl25))
 a$y <- y_coord(gridcol(a$cell25, chl25))
 
 ll <- rgdal::project(as.matrix(a[, c("x", "y")]), projection(chl25), inv = TRUE)
-pp <- over(SpatialPoints(ll, proj4string = CRS(projection(aes_zone_ll))), aes_zone_ll)
+library(sf)
+aes_zone_ll_buff <- as(st_buffer(st_as_sf(aes_zone_ll), 0.5), "Spatial")
+pp <- over(SpatialPoints(ll, proj4string = CRS(projection(aes_zone_ll))), aes_zone_ll_buff)
 a$SectorName <- pp$SectorName
 a$Zone <- pp$Zone
+a <- a %>% dplyr::filter(!is.na(SectorName))
 #db$con %>% db_drop_table(table='chl_25k_tab')
 copy_to(db, a, "chl_25k_tab", temporary = FALSE, indexes = list("cell25", "decade", "season"))
