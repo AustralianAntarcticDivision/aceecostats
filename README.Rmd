@@ -1,7 +1,7 @@
 ---
 title: readme
 output:
-  rmarkdown::html_vignette:
+  rmarkdown::github_document:
     fig_width: 9
     fig_height: 9
 editor_options: 
