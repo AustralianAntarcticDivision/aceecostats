@@ -1,13 +1,13 @@
 ## admin install with
-if (FALSE) {
-appfile <- "inst/workflow/graphics/shiny-chl-assessment.R"
-srvfile <- "/srv/shiny-server/habitat-assess/variables/chl/app.R"
-file.copy(appfile,  srvfile, overwrite = TRUE)
-
-}
+# if (FALSE) {
+# appfile <- "inst/workflow/graphics/shiny-chl-assessment.R"
+# srvfile <- "/srv/shiny-server/habitat-assess/variables/chl/app.R"
+# file.copy(appfile,  srvfile, overwrite = TRUE)
+# 
+# }
 
 ## test mode
-input <- list(region = "Atlantic", zone = "Mid-Latitude", season = "Summer")
+input <- list(region = "Atlantic", zone = "Mid-Latitude", season = "Spring")
 input$coord1 <- TRUE
 ## preparation
 library(aceecostats)
@@ -129,7 +129,7 @@ server <- function(input, output) {
     if (nrow(dens) < 1) return(ggplot() + ggtitle("no data"))
     breaks <- get_intervals()
     ggplot(dens, aes(chla_johnson, group = decade,  colour = decade, weight = area)) + geom_density()  + 
-      facet_wrap(~Zone)  + geom_vline(xintercept = breaks) + 
+      facet_wrap(~Zone)  + #geom_vline(xintercept = breaks) + 
       xlim(0, 5)
     
   })
