@@ -1,4 +1,4 @@
-outf <- "/mnt/acebulk"
+#outf <- "/mnt/acebulk"
 
 ## SEA ICE DURATION
 
@@ -9,17 +9,16 @@ library(dplyr)
 library(aceecostats)
 library(dplyr)
 
-outf <- "/mnt/acebulk"
-dp <- file.path(outf, "seaiceseason")
-db <- dplyr::src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
+outf <- "/home/acebulk"
+dp <- file.path(outf, "data/seaiceseason")
+db <- dplyr::src_sqlite("/home/acebulk/data/habitat_assessment.sqlite3")
 
-gridarea <- readRDS(file.path(outf,"nsidc_south_area.rds"))/1e6
+gridarea <- readRDS(file.path(outf,"data/nsidc_south_area.rds"))/1e6
 ## put a tidy end to the series
 maxdate <- ISOdatetime(2017, 9, 1, 0, 0, 0, tz = "GMT")
 ## load previously calculated sea ice season metrics (seaiceson_southern_2016.Rmd)
 library(raster)
-outf <- "/mnt/acebulk"
-day <- brick(file.path(dp, "south_daycount.grd"))
+day <- brick(file.path(outf, "data/south_daycount.grd"))
 
 
 listtab <- vector("list", nlayers(day))

@@ -6,7 +6,6 @@ library(raster)
 library(aceecostats)
 library(tibble)
 library(dplyr)
-library(feather)
 library(sf)
 ## RUNME
 dp <- "/home/acebulk/data"
@@ -136,10 +135,13 @@ library(purrr)
   gc()
   }
  }
+
+
 big_tab <- bind_rows(big_tab)
 big_tab$area <- raster::extract(gridarea, big_tab$cell_)
 
-big_tab <- big_tab %>% left_join(ucell %>% select(-area), "cell_") %>% inner_join(aes_zone_data) %>% select(-ID)
+big_tab <- big_tab %>% left_join(ucell %>% dplyr::select(-area), "cell_") %>% 
+  inner_join(aes_zone_data) %>% dplyr::select(-ID)
 
 #db$con %>% db_drop_table(table='sst_density_tab')
 

@@ -27,7 +27,7 @@ ice <- build_bulk_file(aes_icefiles, file.path(dp, "ice.grd"), read_i_ice, layer
 
 library(dplyr)
 library(tidync)
-tnc <- tidync(files$fullname[i]) 
+tnc <- tidync(aes_sstfiles$fullname[1]) 
 hf <- tnc %>% 
   hyper_filter(lat  = between(lat, -80, -30))
 update_source <- function(x, source) {

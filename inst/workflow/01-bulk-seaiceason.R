@@ -13,8 +13,8 @@ sfiles <- icefiles(hemisphere = "south")
 # Data are two-daily from 1978 to mid 80s, we just interpolate to fill the days. 
 
 
-dp <- "/mnt/acebulk/seaiceseason"
-bulkfile <- "/mnt/acebulk/data/ice.grd"
+dp <- "/home/acebulk/seaiceseason"
+bulkfile <- "/home/acebulk/data/ice.grd"
 
 
 # Collate a single file for each year, in a local folder. Years start at
@@ -24,7 +24,7 @@ bulkfile <- "/mnt/acebulk/data/ice.grd"
 hmon <- 2
 hmday <- 15
 startdate <- snaptodoy(min(sfiles$date), mon = hmon, mday = hmday, start = TRUE)
-endate <- snaptodoy(max(sfiles$date), mon = hmon, mday = hmday -1, start = FALSE)
+endate <- snaptodoy(max(sfiles$date), mon = hmon, mday = hmday, start = FALSE)
 hemi <- "south"
 ## start dates, including the end of the last year
 bdates <- seq(startdate, endate, by = "1 year")
@@ -84,7 +84,7 @@ for (i in seq_along(files)) {
 }
 
 
-advance <- brick(stack(advance), filename = file.path(dp, "south_advance.grd"))
-retreat <- brick(stack(retreat), filename = file.path(dp, "south_retreat.grd"))
-daycount <- brick(stack(daycount), filename = file.path(dp, "south_daycount.grd"))
+advance <- brick(stack(advance), filename = file.path(dp, "south_advance.grd"), overwrite = TRUE)
+retreat <- brick(stack(retreat), filename = file.path(dp, "south_retreat.grd"), overwrite = TRUE)
+daycount <- brick(stack(daycount), filename = file.path(dp, "south_daycount.grd"), overwrite = TRUE)
   

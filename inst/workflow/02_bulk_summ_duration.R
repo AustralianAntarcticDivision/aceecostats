@@ -3,8 +3,8 @@
 
 library(dplyr)
 # RUNME
-dp <- "/home/acebulk/data"
-db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
+dp <- "/home/acebulk"
+db <- dplyr::src_sqlite(file.path(dp, "data/habitat_assessment.sqlite3"))
 
 library(raster)
 library(tibble)
@@ -13,13 +13,13 @@ library(dplyr)
 library(aceecostats)
 
 ## see data-raw
-gridarea <- readRDS(file.path(dp,"nsidc_south_area.rds"))/1e6
+gridarea <- readRDS(file.path(dp,"data/nsidc_south_area.rds"))/1e6
 ## put a tidy end to the series
 maxdate <- ISOdatetime(2017, 9, 1, 0, 0, 0, tz = "GMT")
 ## load previously calculated sea ice season metrics (seaiceson_southern_2016.Rmd)
 library(raster)
-adv <- brick(file.path(dp, "south_advance.grd"))
-ret <- brick(file.path(dp, "south_retreat.grd"))
+adv <- brick(file.path(dp, "seaiceseason/south_advance.grd"))
+ret <- brick(file.path(dp, "seaiceseason/south_retreat.grd"))
 duration <- ret - adv
 ## if retreat is equal to one, it didn't retreat
 duration[ret == 1] <- 365
