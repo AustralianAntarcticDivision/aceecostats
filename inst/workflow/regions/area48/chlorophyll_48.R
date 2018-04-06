@@ -5,8 +5,7 @@ library(raster)
 library(dplyr)
 library(ggplot2)
 
-library(tidyr)
-library(DT)
+
 #db <- src_sqlite("/mnt/acebulk/habitat_assessment_output.sqlite3")
 dp <- "/home/acebulk/data"
 db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
@@ -25,15 +24,18 @@ chlgrid <- raster(spex::buffer_extent(projectExtent(raster(extent(-180, 180, -90
 
 ccamlr <- readRDS("/home/shared/data/assessment/sectors/ccamlr_statareas.rds")
 ccamlr48 <- subset(ccamlr, grepl("48", name))
+rm(ccamlr)
 ## use dopey indexing because assuming first column
 d$ccamlr <- classify_cells_by_polygon(d$cell25, chlgrid, ccamlr48[, "name"])
 
+d <- d %>% dplyr::filter(!is.na(ccamlr))
 
 op <- options(warn = -1)
-ggplot(d %>% dplyr::filter(SectorName == "Atlantic"),  aes(x = chla_johnson, group = decade, weight = 25, colour = decade)) + 
+## 625 is area of 25km*25km pixels
+ggplot(d %>% dplyr::filter(SectorName == "Atlantic"),  aes(x = chla_johnson, group = decade, weight = 625, colour = decade)) + 
   geom_density() + facet_wrap(SectorName ~ season) + scale_x_log10()
 ggsave("inst/workflow/regions/area48/chl_48_Atlantic.png")
-ggplot(d %>% dplyr::filter(SectorName == "EastPacific"),  aes(x = chla_johnson, group = decade, weight = 25, colour = decade)) + 
+ggplot(d %>% dplyr::filter(SectorName == "EastPacific"),  aes(x = chla_johnson, group = decade, weight = 625, colour = decade)) + 
   geom_density() + facet_wrap(SectorName ~ season) + scale_x_log10()
 ggsave("inst/workflow/regions/area48/chl_48_EastPacific.png")
 

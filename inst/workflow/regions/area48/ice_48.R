@@ -19,7 +19,8 @@ icegrid <- raster(extent(-3950000, 3950000, -3950000, 4350000),
 
 ccamlr <- readRDS("/home/shared/data/assessment/sectors/ccamlr_statareas.rds")
 ccamlr48 <- subset(ccamlr, grepl("48", name))
-                                                        ## use dopey indexing because assuming first column
+rm(ccamlr)
+## use dopey indexing because assuming first column
 d$ccamlr <- classify_cells_by_polygon(d$cell_, icegrid, ccamlr48[, "name"])
 
 
