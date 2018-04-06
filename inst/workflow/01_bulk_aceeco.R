@@ -31,9 +31,9 @@ tnc <- tidync(aes_sstfiles$fullname[1])
 hf <- tnc %>% 
   hyper_filter(lat  = between(lat, -80, -30))
 update_source <- function(x, source) {
-  src <- attr(x, "source")
+  src <- x[["source"]]
   src$source <- source
-  attr(x, "source") <- src
+  x[["source"]] <- src
   x
 }
 read_i_sst_tidync <- function(i, files) {
