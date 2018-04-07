@@ -25,8 +25,13 @@ d$ccamlr <- classify_cells_by_polygon(d$cell_, sstgrid, ccamlr48[, "name"])
 d <- d %>% dplyr::filter(!is.na(ccamlr))
 op <- options(warn = -1)
 ggplot(d %>% dplyr::filter(SectorName ==  "Atlantic"),  
-       aes(x = max, group = decade, weight = area)) + 
+       aes(x = max, group = decade, weight = area, colour = decade)) + 
   geom_density() + facet_wrap(Zone ~ season)
+ggsave("inst/workflow/regions/area48/sst_48_Atlantic.png")
+ggplot(d %>% dplyr::filter(SectorName ==  "EastPacific"),  
+       aes(x = max, group = decade, weight = area, colour = decade)) + 
+  geom_density() + facet_wrap(Zone ~ season)
+ggsave("inst/workflow/regions/area48/sst_48_EastPacific.png")
 
 options(op)
 
