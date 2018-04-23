@@ -50,25 +50,33 @@ d$monthid <- NULL
 
 
 
-sstfiles <- raadfiles::oisst_monthly_files() %>% 
-  dplyr::filter(date > as.POSIXct("2002-07-03"), format(date, "%m") %in% c("12", "01", "02")) 
+sstfiles <- raadfiles::oisst_daily_files() %>% 
+  dplyr::filter(date >= as.POSIXct("2002-12-01"), format(date, "%m") %in% c("12", "01", "02")) 
 sstfiles$month <- as.Date(format(sstfiles$date, "%Y-%m-15"))
-
-l <- vector("list", nrow(sstfiles)) 
+read_sst <- function(file) {
+  sst <- raster::raster(file, varname = "sst") 
+  ice <- raster::raster(file, varname = "ice")
+  sst <- crop(sst, extent(0, 360, -90, 0))
+  ice <- crop(ice, extent(0, 360, -90, 0))
+  sst[!is.na(raster::values(ice))] <- NA
+  sst
+}
 umonthsst <- unique(sstfiles$month)
-for (i in seq_along(l)) {
-  sst <- raster::raster(sstfiles$fullname[1], band = sstfiles$band[i], varname = "sst")
-  psst <- projectRaster(sst, defaultgrid())
-  ##ice <- readice_monthly(format(sstfiles$date[i], "%Y-%m-15"))
-  l [[i]] <- psst
+sstfilelist <- split(sstfiles, sstfiles$month)[as.character(umonthsst)]
+l <- vector("list", length(sstfilelist))
+for (i in seq_along(sstfilelist)) {
+  sst <- calc(raster::brick(purrr::map(sstfilelist[[i]]$fullname, read_sst)), mean)
+  psst <- projectRaster(raster::rotate(sst), default_grid())
+  l[[i]] <- psst
+  print(i)
 }
 
 dsst <- dplyr::bind_rows(lapply(l, tabularaster::as_tibble), .id = "monthid")
 dsst$month <- umonthsst[as.integer(dsst$monthid)]
 dsst <- transmute(dsst, sst = cellvalue, cell25 = cellindex, month = month)
 
-#d <- tbl(db, "chl_sst_25k_monthly") %>% dplyr::select(cell25, chla_johnson, month) %>% collect(Inf)
-#d$month <- as.Date("1970-01-01") + d$month
+d <- tbl(db, "chl_sst_25k_monthly") %>% dplyr::select(cell25, chla_johnson, month) %>% collect(Inf)
+d$month <- as.Date("1970-01-01") + d$month
 
 
 d2 <- left_join(dsst, d)
@@ -76,8 +84,8 @@ d2 <- left_join(dsst, d)
 
 dp <- "/home/acebulk/data"
 db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
-db$con %>% db_drop_table(table='chl_sst_25k_monthly')
-copy_to(db, d2, "chl_sst_25k_monthly", temporary = FALSE, indexes = list("cell25", "month"))
+#db$con %>% db_drop_table(table='chl_sst_25k_monthly')
+#copy_to(db, d2, "chl_sst_25k_monthly", temporary = FALSE, indexes = list("cell25", "month"))
 
 sst_from_db <- function(db, amonth) {
  # amonth <- as.Date(format(amonth, "%Y-%m-15"))
@@ -107,3 +115,18 @@ chl_from_db <- function(db, amonth) {
 
 chl <- chl_from_db(db, as.integer(as.Date("2002-12-15")))
 sst <- sst_from_db(db,  as.integer(as.Date("2002-12-15")))
+missings <- function(sst, chl) {
+  which(is.na(raster::values(chl)) & !is.na(raster::values(sst)))
+}
+
+vv <- missings(sst, chl)
+
+
+## lookup nearest valid value
+
+xy <- tabularaster::as_tibble(chl, xy = TRUE) %>% dplyr::filter(!is.na(cellvalue))
+library(nabor)
+knn <- WKNNF(as.matrix(xy[c("x", "y")]))
+kq <- knn$query(xyFromCell(chl, vv), k = 1, eps = 0)
+chl[vv] <- xy$cellvalue[kq$nn.idx]
+plot(chl, col = pal$cols, breaks = pal$breaks, legend = F)
