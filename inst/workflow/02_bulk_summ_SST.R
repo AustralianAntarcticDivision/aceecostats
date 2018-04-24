@@ -8,7 +8,7 @@ library(tibble)
 library(dplyr)
 library(sf)
 ## RUNME
-dp <- "/home/acebulk/data"
+# dp <- "/home/acebulk/data"
 db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
 ## put a tidy end to the series
 maxdate <- ISOdatetime(2016, 12, 31, 23, 59, 59, tz = "GMT")
