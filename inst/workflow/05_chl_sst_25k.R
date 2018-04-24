@@ -79,8 +79,17 @@ d <- dplyr::bind_rows(l, .id = "monthid")
 d$date <- umonth[as.integer(d$monthid)]
 d$monthid <- NULL
 
-#db$con %>% db_drop_table(table='chl_sst_25k_monthly')
-#copy_to(db, d, "chl_sst_25k_monthly", temporary = FALSE, indexes = list("cell", "date"))
+
+
+## post-hoc updates
+d <- tbl(db, "chl_sst_25k_monthly") %>% collect(Inf)
+d$date <- as.integer(d$date)
+d$year <- as.integer(format(as.Date("1970-01-01") + d$date, "%Y"))
+d$mon<- as.integer(format(as.Date("1970-01-01") + d$date, "%m"))
+bad <- is.na(d$sst) & is.na(d$chla)
+d <- d[!bad, ]
+# db$con %>% db_drop_table(table='chl_sst_25k_monthly')
+# copy_to(db, d, "chl_sst_25k_monthly", temporary = FALSE, indexes = list("cell", "date", "year", "mon"))
 
 dp <- "/home/acebulk/data"
 db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))

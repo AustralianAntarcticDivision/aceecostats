@@ -90,6 +90,9 @@ library(palr)
 plot(sst, col  = sstPal(24))
 chlpal <- chlPal(palette = TRUE)
 plot(chla, col = chlpal$cols, breaks = chlpal$breaks, legend = FALSE)
+contour(sst, add = T, levels = seq(-1, 20, by = 1.5), col = rgb(0, 0, 0, 0.6))
+library(aceecostats)
+plot(spTransform(aes_region_simple, projection(sst)), add = T)
 ```
 
 ## Database construction
