@@ -1,0 +1,120 @@
+---
+title: "Chlorophyll-a and SST database"
+author: "Michael Sumner, Rowan Trebilco, Andrew Constable"
+date: "4/24/2018"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(raster)
+```
+
+## SST and chl-a database 
+
+We built a database of summer chlorophyll-a and sea surface temperature for the Southern Ocean summarized by month. 
+
+This consists of a table of values of SST and chlor-a in a database on ACE-ecostats. 
+
+```{r}
+## connect to the db
+dp <- "/home/acebulk/data"
+db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
+
+## create a query for the table
+library(dplyr)
+(tab <- tbl(db, "chl_sst_25k_monthly"))
+```
+
+The `tab` object is now a live connection to the summary table, and can be used to issue queries of the data. 
+
+We can inquire directly for various metrics. 
+
+```{r}
+## the number of total rows
+tab %>% tally()
+
+## the start and end date (in days since 1970-01-01)
+## convert to date format (in R after collect)
+epoch <- as.Date("1970-01-01")
+tab %>% summarize(start = min(date, na.rm = TRUE), end = max(date, na.rm = TRUE)) %>%
+  collect(n = Inf) %>% 
+  mutate(start = start + epoch, end = end + epoch)
+
+## calculate number of non missing values
+
+tab %>% dplyr::filter(!is.na(chla) | !is.na(sst)) %>% tally()
+
+```
+
+We can issue group by operations and let the database perform tasks, or at any time use the `collect(n = Inf)` function to pull the results of a query into memory. (There are 3 columns of 64-bit doubles, and 1 32-bit integer so `r 9587843 * 7 * 4/1e9`Gb of useable data. )
+
+
+It is possible to re-map the data back onto its 25km grid, but we need a little bit of extra material. The grid is a Lambert Azimuthal Equal Area grid centred on the south pole. We can insert this function any that the original grid is required. 
+
+
+```{r}
+default_grid <- function() {
+  prjj <-         "+proj=laea +lat_0=-90 +datum=WGS84"
+  raster(spex::buffer_extent(projectExtent(raster(extent(-180, 180, -90, -30), 
+                                                             crs = "+init=epsg:4326"), 
+                                                      prjj), 25000), 
+                    res = 25000, crs = prjj)
+  
+  
+}
+
+```
+
+
+Now issue a query to summarize the entire data set into a grand summer mean and populate the grid. 
+
+(Be sure to collect the result of the query into memory). 
+
+```{r}
+gmean <- tab %>% group_by(cell) %>% summarize(sst = mean(sst, na.rm = TRUE), chla = mean(chla, na.rm = TRUE)) %>% dplyr::collect(n = Inf)
+library(raster)
+chla <- setValues(default_grid(), NA)
+sst <- setValues(default_grid(), NA)
+chla[gmean$cell] <- gmean$chla
+sst[gmean$cell] <- gmean$sst
+```
+
+Plot these to show the overall summary. 
+
+```{r}
+library(palr)
+plot(sst, col  = sstPal(24))
+chlpal <- chlPal(palette = TRUE)
+plot(chla, col = chlpal$cols, breaks = chlpal$breaks, legend = FALSE)
+```
+
+## Database construction
+
+
+The script to recreate the database is https://github.com/AustralianAntarcticDivision/aceecostats/blob/master/inst/workflow/05_chl_sst_25k.R
+
+### Data sources files
+
+The data files used 
+
+* MODISA L3 bin daily RRS 4km, converted to Johnson 2013 chlorophyll-a, and summarized by 25km cell into monthly means
+* OISST daily 0.25 degree daily sst, masked by in-built ice mask and summarized by 25km cell into monthly means
+
+Missing values in SST only exist where sea ice is masked by the OISST product. 
+
+Missing values in CHLA also exist where cloud cover obscured the instrument during the entire month, on the order of 2500-7000 25km cells per month. For these we found the nearest valid value and filled it in.  We used nearest-neighbour lookup with the `nabor` package. 
+
+### Data preparation
+
+We maintain a collection of daily L3 bin  4km chlorophyll-a data files, with Johnson 2013 chlorophyll pre-calculated. The L3 bins are summarized into 25km cells by bin-centre lookup, transforming the bin centre to Lambert Azimuthal Equal area. 
+
+The SST pixels are transformed directly to the 25km cells by raster reprojection on each daily grid. 
+
+
+Data references, timings, size of cache, etc. 
+
+
