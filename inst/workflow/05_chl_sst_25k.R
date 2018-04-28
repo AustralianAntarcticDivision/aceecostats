@@ -2,6 +2,7 @@ library(raster)
 library(aceecostats)
 library(dplyr)
 library(raadtools)
+## CHLA-RJ and OISST (daily)
 chlfiles <- oc_sochla_files(product = "MODISA")  %>% 
   dplyr::filter(format(date, "%m") %in% c("12", "01", "02")) %>%  
   mutate(month = as.Date(format(date, "%Y-%m-15")))
@@ -9,6 +10,11 @@ chlfiles <- oc_sochla_files(product = "MODISA")  %>%
 sstfiles <- raadfiles::oisst_daily_files() %>% 
   dplyr::filter(between(date, min(chlfiles$date), max(chlfiles$date)), format(date, "%m") %in% c("12", "01", "02"))  %>% 
   mutate(month = as.Date(format(date, "%Y-%m-15")))
+
+
+## KD490 and PAR (monthly)
+kdfiles <- raadtools::ocfiles(time.resolution = "monthly", product = "MODISA", varname = "KD490", type = "L3m")
+parfiles <- raadtools::ocfiles(time.resolution = "monthly", product = "MODISA", varname = "PAR", type = "L3m")
 
 
 default_grid <- function() {
@@ -59,72 +65,106 @@ umonth <- unique(chlfiles$month)
 
 chlfilelist <- split(chlfiles, chlfiles$month)[as.character(umonth)]
 sstfilelist <- split(sstfiles, sstfiles$month)[as.character(umonth)]
-
+parfilelist <- parfiles$fullname[findInterval(as.POSIXct(umonth), parfiles$date)]
+kdfilelist <-  kdfiles$fullname[findInterval(as.POSIXct(umonth), kdfiles$date)]
 ## figure out append code for db to build table from scratch
 library(nabor)
 l <- vector("list", length(umonth))
 for (i in seq_along(umonth)) {
   chl <- read_summarize_chl(chlfilelist[[i]]$fullname)
   sst <- read_summarize_sst(sstfilelist[[i]]$fullname)
-  vv <- missings(sst, chl)
+  
+  par <- projectRaster(raster(parfilelist[i]), 
+                       default_grid())
+  
+  vv <- missings(par, chl)
   xy <- tabularaster::as_tibble(chl, xy = TRUE) %>% dplyr::filter(!is.na(cellvalue))
-
   knn <- WKNNF(as.matrix(xy[c("x", "y")]))
   kq <- knn$query(xyFromCell(chl, vv), k = 1, eps = 0)
   chl[vv] <- xy$cellvalue[kq$nn.idx]
-  l[[i]] <- tibble(sst = raster::values(sst), chla = raster::values(chl), cell = seq_len(ncell(sst)))  
+  
+  
+  kd <- projectRaster(raster(kdfilelist[i]), 
+                      default_grid())
+
+  vv <- missings(par, kd)
+  xy <- tabularaster::as_tibble(kd, xy = TRUE) %>% 
+    dplyr::filter(!is.na(cellvalue))
+  library(nabor)
+  knn <- WKNNF(as.matrix(xy[c("x", "y")]))
+  kq <- knn$query(xyFromCell(kd, vv), k = 1, eps = 0)
+  kd[vv] <- xy$cellvalue[kq$nn.idx]
+  
+  
+  l[[i]] <- tibble(sst = raster::values(sst), chla = raster::values(chl), 
+                   kd490 = raster::values(kd), 
+                   par = raster::values(par), 
+                   cell = seq_len(ncell(sst)))  
 }
+
+
+## START HERE
 
 d <- dplyr::bind_rows(l, .id = "monthid")
 d$date <- umonth[as.integer(d$monthid)]
 d$monthid <- NULL
-
-
-
 ## post-hoc updates
-d <- tbl(db, "chl_sst_25k_monthly") %>% collect(Inf)
 d$date <- as.integer(d$date)
 d$year <- as.integer(format(as.Date("1970-01-01") + d$date, "%Y"))
 d$mon<- as.integer(format(as.Date("1970-01-01") + d$date, "%m"))
-bad <- is.na(d$sst) & is.na(d$chla)
+bad <- is.na(d$sst) & is.na(d$chla) & is.na(d$kd490) & is.na(d$par)
 d <- d[!bad, ]
-# db$con %>% db_drop_table(table='chl_sst_25k_monthly')
-# copy_to(db, d, "chl_sst_25k_monthly", temporary = FALSE, indexes = list("cell", "date", "year", "mon"))
 
-dp <- "/home/acebulk/data"
-db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
+
+
+
 
 library(dplyr)
 library(raster)
-sst_from_db <- function(db, amonth) {
- # amonth <- as.Date(format(amonth, "%Y-%m-15"))
- tab <-  tbl(db, "chl_sst_25k_monthly") %>% 
-    dplyr::select(cell, sst, date) %>% 
-    dplyr::filter(date == amonth) %>% dplyr::collect(Inf)
-  
-  g <- setValues(default_grid(), NA)
-  g[tab$cell] <- tab$sst
-  g
-  
-}
+dp <- "/home/acebulk/data"
+db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
+#db$con %>% db_drop_table(table='chl_sst_25k_monthly')
+copy_to(db, d, "chl_sst_25k_monthly", temporary = FALSE, indexes = list("cell", "date", "year", "mon"))
 
 
-
-
-chl_from_db <- function(db, amonth) {
- # amonth <- as.Date(format(amonth, "%Y-%m-15"))
-  tab <-  tbl(db, "chl_sst_25k_monthly") %>% 
-    dplyr::select(cell, chla, date) %>% 
-    dplyr::filter(date == amonth) %>% dplyr::collect(Inf)
-  
-  g <- setValues(default_grid(), NA)
-  g[tab$cell] <- tab$chla
-  g
-  
-}
-
-
-chl <- chl_from_db(db, as.integer(as.Date("2002-12-15")))
-sst <- sst_from_db(db,  as.integer(as.Date("2002-12-15")))
-
-
+# 
+# 
+# library(dplyr)
+# library(raster)
+# sst_from_db <- function(db, amonth) {
+#  # amonth <- as.Date(format(amonth, "%Y-%m-15"))
+#  tab <-  tbl(db, "chl_sst_25k_monthly") %>% 
+#     dplyr::select(cell, sst, date) %>% 
+#     dplyr::filter(date == amonth) %>% dplyr::collect(Inf)
+#   
+#   g <- setValues(default_grid(), NA)
+#   g[tab$cell] <- tab$sst
+#   g
+#   
+# }
+# 
+# 
+# 
+# 
+# chl_from_db <- function(db, amonth) {
+#  # amonth <- as.Date(format(amonth, "%Y-%m-15"))
+#   tab <-  tbl(db, "chl_sst_25k_monthly") %>% 
+#     dplyr::select(cell, chla, date) %>% 
+#     dplyr::filter(date == amonth) %>% dplyr::collect(Inf)
+#   
+#   g <- setValues(default_grid(), NA)
+#   g[tab$cell] <- tab$chla
+#   g
+#   
+# }
+# 
+# 
+# chl <- chl_from_db(db, as.integer(as.Date("2002-12-15")))
+# sst <- sst_from_db(db,  as.integer(as.Date("2002-12-15")))
+# 
+# 
+# 
+# 
+# 
+# 
+# 
