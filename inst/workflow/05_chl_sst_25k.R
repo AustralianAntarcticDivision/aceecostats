@@ -4,11 +4,11 @@ library(dplyr)
 library(raadtools)
 ## CHLA-RJ and OISST (daily)
 chlfiles <- oc_sochla_files(product = "MODISA")  %>% 
-  dplyr::filter(format(date, "%m") %in% c("12", "01", "02")) %>%  
+  #dplyr::filter(format(date, "%m") %in% c("12", "01", "02")) %>%  
   mutate(month = as.Date(format(date, "%Y-%m-15")))
 
 sstfiles <- raadfiles::oisst_daily_files() %>% 
-  dplyr::filter(between(date, min(chlfiles$date), max(chlfiles$date)), format(date, "%m") %in% c("12", "01", "02"))  %>% 
+  dplyr::filter(between(date, min(chlfiles$date), max(chlfiles$date))) %>%  #, format(date, "%m") %in% c("12", "01", "02"))  %>% 
   mutate(month = as.Date(format(date, "%Y-%m-15")))
 
 
@@ -123,7 +123,7 @@ library(dplyr)
 library(raster)
 dp <- "/home/acebulk/data"
 db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
-#db$con %>% db_drop_table(table='chl_sst_25k_monthly')
+db$con %>% db_drop_table(table='chl_sst_25k_monthly')
 copy_to(db, d, "chl_sst_25k_monthly", temporary = FALSE, indexes = list("cell", "date", "year", "mon"))
 
 
