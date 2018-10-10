@@ -38,12 +38,18 @@ read_summarize_chl <- function(fullname) {
   x <- fullname %>% purrr::map_df(~readRDS(.x)) %>%  
     mutate(cell25 = two5_cell(bin_num)) %>% 
     group_by(cell25)  %>% 
-    summarize(chla_johnson = mean(chla_johnson, na.rm = TRUE)) 
-  out <- setValues(default_grid(), NA)
-  out[x$cell25] <- x$chla_johnson
-  out
+    summarize(chla_johnson = mean(chla_johnson, na.rm = TRUE), 
+              chla_nasa = mean(chla_nasa, na.rm = TRUE)) 
+  out1 <- setValues(default_grid(), NA)
+  out1[x$cell25] <- x$chla_johnson
+  out2 <- setValues(default_grid(), NA)
+  out2[x$cell25] <- x$chla_nasa
+  
+  brick(out1, out2)
   
 }
+
+
 read_sst <- function(file) {
   sst <- raster::raster(file, varname = "sst") 
   ice <- raster::raster(file, varname = "ice")
@@ -72,6 +78,8 @@ library(nabor)
 l <- vector("list", length(umonth))
 for (i in seq_along(umonth)) {
   chl <- read_summarize_chl(chlfilelist[[i]]$fullname)
+  chl_johnson <- chl[[1]]
+  chl_nasa <- chl[[2]]
   sst <- read_summarize_sst(sstfilelist[[i]]$fullname)
   
   par <- projectRaster(raster(parfilelist[i]), 
@@ -96,7 +104,9 @@ for (i in seq_along(umonth)) {
   kd[vv] <- xy$cellvalue[kq$nn.idx]
   
   
-  l[[i]] <- tibble(sst = raster::values(sst), chla = raster::values(chl), 
+  l[[i]] <- tibble(sst = raster::values(sst), 
+                   chla_johnson = raster::values(chl_johnson), 
+                   chla_nasa = raster::values(chl_nasa),
                    kd490 = raster::values(kd), 
                    par = raster::values(par), 
                    cell = seq_len(ncell(sst)))  
@@ -104,15 +114,18 @@ for (i in seq_along(umonth)) {
 
 
 ## START HERE
+#d$prod <- croc::prod_BeFa(d$chla_nasa, d$par, d$sst, d$daylength)
 
 d <- dplyr::bind_rows(l, .id = "monthid")
 d$date <- umonth[as.integer(d$monthid)]
+ll <- rgdal::project(xyFromCell(default_grid(), d$cell), projection(default_grid()), inv = TRUE)
+d$daylength <- croc:::daylength(ll[,2], as.integer(format(d$date, "%j")))
 d$monthid <- NULL
 ## post-hoc updates
 d$date <- as.integer(d$date)
 d$year <- as.integer(format(as.Date("1970-01-01") + d$date, "%Y"))
 d$mon<- as.integer(format(as.Date("1970-01-01") + d$date, "%m"))
-bad <- is.na(d$sst) & is.na(d$chla) & is.na(d$kd490) & is.na(d$par)
+bad <- is.na(d$sst) & is.na(d$chla_johnson) & is.na(d$kd490) & is.na(d$par)
 d <- d[!bad, ]
 
 
@@ -123,7 +136,9 @@ library(dplyr)
 library(raster)
 dp <- "/home/acebulk/data"
 db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
-db$con %>% db_drop_table(table='chl_sst_25k_monthly')
+
+ 
+#db$con %>% db_drop_table(table='chl_sst_25k_monthly')
 copy_to(db, d, "chl_sst_25k_monthly", temporary = FALSE, indexes = list("cell", "date", "year", "mon"))
 
 
