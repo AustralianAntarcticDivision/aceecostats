@@ -7,11 +7,11 @@ default_grid <- function() {
   
   
 }
-aes_region_simple$ID <- 1:nrow(aes_region_simple)
-region <- fasterize::fasterize(sf::st_as_sf(aes_region_simple), default_grid(), field = "ID")
+aes_zone$ID <- 1:nrow(aes_zone)
+region <- fasterize::fasterize(sf::st_as_sf(aes_zone), default_grid(), field = "ID")
 region <- tabularaster::as_tibble(region, value = TRUE) %>% 
-  mutate(Zone = aes_region_simple$Zone[cellvalue], 
-         SectorName = aes_region_simple$SectorName[cellvalue]) %>% 
+  mutate(Zone = aes_zone$Zone[cellvalue], 
+         SectorName = aes_zone$SectorName[cellvalue]) %>% 
   dplyr::select(-cellvalue)
 
 usethis::use_data(region)
