@@ -132,59 +132,29 @@ for (i in seq_along(umonth)) {
 
 d <- dplyr::bind_rows(l, .id = "monthid")
 d$date <- umonth[as.integer(d$monthid)]
-ll <- rgdal::project(xyFromCell(default_grid(), d$cell), projection(default_grid()), inv = TRUE)
-d$daylength <- croc:::daylength(ll[,2], as.integer(format(d$date, "%j")))
-d$monthid <- NULL
+#ll <- rgdal::project(xyFromCell(default_grid(), d$cell), projection(default_grid()), inv = TRUE)
+#d$daylength <- croc:::daylength(ll[,2], as.integer(format(d$date, "%j")))
+#d$monthid <- NULL
 ## post-hoc updates
 d$date <- as.integer(d$date)
 d$year <- as.integer(format(as.Date("1970-01-01") + d$date, "%Y"))
 d$mon<- as.integer(format(as.Date("1970-01-01") + d$date, "%m"))
-bad <- is.na(d$sst) & is.na(d$chla_johnson) & is.na(d$kd490) & is.na(d$par)
+bad <- is.na(d$sst_med) #& is.na(d$chla_johnson) & is.na(d$kd490) & is.na(d$par)
 d <- d[!bad, ]
 
+saveRDS(d, "/home/acebulk/data/sst_min-max-med_25k.rds")
 
-
-
+## we need to join these ponies
+sstd <- readRDS("/home/acebulk/data/sst_min-max-med_25k.rds")
+chlprev <- readRDS("/home/acebulk/data/chl_sst_25k_tab.rds")
 
 library(dplyr)
-library(raster)
-dp <- "/home/acebulk/data"
-db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
+dd <- chlprev %>% mutate(date_int = as.integer(as.Date(date))) %>% 
+  inner_join(sstd, c("date_int" = "date", "cell" = "cell"))
+dd$date_int <- NULL
+dd <- dd %>% dplyr::filter(!is.na(chla_johnson))
 
- 
-#db$con %>% db_drop_table(table='chl_sst_25k_monthly')
-copy_to(db, d, "chl_sst_25k_monthly", temporary = FALSE, indexes = list("cell", "date", "year", "mon"))
-
-
-
-## save out to file, new sst+chl on common 25k grid MDSumner 2018-10-11
-library(dplyr)
-
-db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
-cs_tab <-  tbl(db, "chl_sst_25k_monthly")  %>%  
-  dplyr::select(-chla_nasa, -kd490, -par, -daylength, -year, -mon) %>%
-  collect(n = Inf) #%>%
-
-
-cs_tab$date <- as.POSIXct(as.Date("1970-01-01") + cs_tab$date)
-## join on region by cell
-library(aceecostats)
-cs_tab <- cs_tab %>% inner_join(region, c("cell" = "cellindex"))
-cs_tab$decade <- decade_maker(cs_tab$date)
-cs_tab$season <- aes_season(cs_tab$date)
-cs_tab$area <- 625 
-
-cs_tab <- cs_tab %>% dplyr::filter(!is.na(Zone), !is.na(SectorName), !is.na(decade)) %>% 
-  mutate(season=factor(season, levels=c("Summer","Autumn","Winter","Spring")), 
-         SectorName=factor(SectorName, levels=c("Atlantic", "Indian","WestPacific","EastPacific"))) 
-
-
-#"/home/acebulk/data/"
-saveRDS(cs_tab, "/home/acebulk/data/chl_sst_25k_tab.rds")
-
-
-
-
+saveRDS(dd, "/home/acebulk/data/chl_sst-min-med-max_chl_25k.rds")
 
 # 
 # 
