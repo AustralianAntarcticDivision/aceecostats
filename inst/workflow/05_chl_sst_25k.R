@@ -142,6 +142,36 @@ db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
 copy_to(db, d, "chl_sst_25k_monthly", temporary = FALSE, indexes = list("cell", "date", "year", "mon"))
 
 
+
+## save out to file, new sst+chl on common 25k grid MDSumner 2018-10-11
+library(dplyr)
+
+db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
+cs_tab <-  tbl(db, "chl_sst_25k_monthly")  %>%  
+  dplyr::select(-chla_nasa, -kd490, -par, -daylength, -year, -mon) %>%
+  collect(n = Inf) #%>%
+
+
+cs_tab$date <- as.POSIXct(as.Date("1970-01-01") + cs_tab$date)
+## join on region by cell
+library(aceecostats)
+cs_tab <- cs_tab %>% inner_join(region, c("cell" = "cellindex"))
+cs_tab$decade <- decade_maker(cs_tab$date)
+cs_tab$season <- aes_season(cs_tab$date)
+cs_tab$area <- 625 
+
+cs_tab <- cs_tab %>% dplyr::filter(!is.na(Zone), !is.na(SectorName), !is.na(decade)) %>% 
+  mutate(season=factor(season, levels=c("Summer","Autumn","Winter","Spring")), 
+         SectorName=factor(SectorName, levels=c("Atlantic", "Indian","WestPacific","EastPacific"))) 
+
+
+#"/home/acebulk/data/"
+saveRDS(cs_tab, "/home/acebulk/data/chl_sst_25k_tab.rds")
+
+
+
+
+
 # 
 # 
 # library(dplyr)
