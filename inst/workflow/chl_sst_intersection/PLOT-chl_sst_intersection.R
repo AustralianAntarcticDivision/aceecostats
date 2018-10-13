@@ -30,27 +30,30 @@ gfc_combined <-  cttab %>%
 # row 2 = good sst area
 # row 3 = good for both
 # all panels also show sector boundaries
-library(sf)
-grid <- spex::polygonize(default_grid())
-grid$cell <- 1:nrow(grid)
 
-
-#  plot(grid$geometry, col = "grey", border = NA)
-
+library(aceecostats)
+library(raster)
 dec1 <- "1998-2007"
 dec2 <- "2007-2017"
+## copy the grid filled with NA
 gridNA <- setValues(default_grid(), NA_integer_)
 chl_1  <- gridNA
+## populate each subset of cells with a 1 if present
 chl_1[gfc_chl$cell[gfc_chl$decade == dec1]] <- 1L
+
+## apply to other cases
 sst_1 <- gridNA
 sst_1[gfc_sst$cell[gfc_sst$decade == dec1]] <- 1L
+
 chl_2  <- gridNA
 chl_2[gfc_chl$cell[gfc_chl$decade == dec2]] <- 1L
+
 sst_2 <- gridNA
 sst_2[gfc_sst$cell[gfc_sst$decade == dec2]] <- 1L
 
 c_s_1 <- gridNA
 c_s_1[gfc_combined$cell[gfc_combined$decade == dec1]] <- 1L
+
 c_s_2 <- gridNA
 c_s_2[gfc_combined$cell[gfc_combined$decade == dec2]] <- 1L
 
@@ -75,3 +78,5 @@ plot(aes_zone, add = TRUE)
 
 image(c_s_2, ylab = "", xlab = "", col = "grey", axes = FALSE, box = FALSE, asp = 1)
 plot(aes_zone, add = TRUE)
+
+
