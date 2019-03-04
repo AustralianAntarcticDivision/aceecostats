@@ -1,6 +1,8 @@
 ---
 title: "Sea ice seasonality"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 Here we calculate sea ice season for the southern hemisphere, after the method of Massom et al. (2013). 
@@ -32,7 +34,7 @@ Data are two-daily from 1978 to mid 80s, we just interpolate to fill the days.
 # Utilities. 
 
 ```{r}
-dp <- "/mnt/acebulk/seaiceseason"
+dp <- "/rdsi/PRIVATE/raad/data_local/aad.gov.au/iceseason"
 
 ## function to ensure we have clean boundaries (untidy for now)
 snaptodoy <- function(date, mon = 2, mday = 15, start = TRUE) {
@@ -200,7 +202,7 @@ The method proceeds to threshold the ice values at 15% or greater concentration,
 ```{r, echo=TRUE, eval = FALSE}
 
 library(raadtools)
-files <- list.files(file.path(dp, "yearfiles"), full.names = TRUE, pattern = "^south.*grd$")
+files <- list.files(file.path("yearfiles"), full.names = TRUE, pattern = "^south.*grd$")
 
 advance <- vector("list", length(files))
 retreat <- vector("list", length(files))
@@ -216,13 +218,88 @@ for (i in seq_along(files)) {
 }
 
 
-advance <- brick(stack(advance), filename = file.path(dp, "south_advance.grd"))
-retreat <- brick(stack(retreat), filename = file.path(dp, "south_retreat.grd"))
-daycount <- brick(stack(daycount), filename = file.path(dp, "south_daycount.grd"))
+#advance <- brick(stack(advance), filename = file.path(dp, "south_advance.grd"))
+#retreat <- brick(stack(retreat), filename = file.path(dp, "south_retreat.grd"))
+#daycount <- brick(stack(daycount), filename = file.path(dp, "south_daycount.grd"))
   
+advance <- readAll(brick(stack(advance)))
+retreat <- readAll(brick(stack(retreat)))
+daycount <- readAll(brick(stack(daycount)))
+  
+saveRDS(advance, file.path(dp, "ice_advance.rds"))
+saveRDS(retreat, file.path(dp, "ice_retreat.rds"))
+saveRDS(daycount, file.path(dp, "ice_daycount.rds"))
 
 ```
 
+
+at 70%
+```{r, echo=TRUE, eval = FALSE}
+
+library(raadtools)
+files <- list.files(file.path("yearfiles"), full.names = TRUE, pattern = "^south.*grd$")
+
+advance <- vector("list", length(files))
+retreat <- vector("list", length(files))
+daycount <- vector("list", length(files))
+
+for (i in seq_along(files)) {
+  ## obj contains 2 rasters "adv" and "ret"
+  obj <- calc_ice_season(files[i], threshval = 70)
+  advance[[i]] <- obj$adv
+  retreat[[i]] <- obj$ret
+  daycount[[i]] <- calc(readAll(brick(files[i])) > 70, mean, na.rm = TRUE) * 365
+  
+}
+
+
+#advance <- brick(stack(advance), filename = file.path(dp, "south_advance.grd"))
+#retreat <- brick(stack(retreat), filename = file.path(dp, "south_retreat.grd"))
+#daycount <- brick(stack(daycount), filename = file.path(dp, "south_daycount.grd"))
+  
+advance <- readAll(brick(stack(advance)))
+retreat <- readAll(brick(stack(retreat)))
+daycount <- readAll(brick(stack(daycount)))
+  
+saveRDS(advance, file.path(dp, "ice_70_advance.rds"))
+saveRDS(retreat, file.path(dp, "ice_70_retreat.rds"))
+saveRDS(daycount, file.path(dp, "ice_70_daycount.rds"))
+
+```
+
+at 90%
+```{r, echo=TRUE, eval = FALSE}
+
+library(raadtools)
+files <- list.files(file.path("yearfiles"), full.names = TRUE, pattern = "^south.*grd$")
+
+advance <- vector("list", length(files))
+retreat <- vector("list", length(files))
+daycount <- vector("list", length(files))
+
+for (i in seq_along(files)) {
+  ## obj contains 2 rasters "adv" and "ret"
+  obj <- calc_ice_season(files[i], threshval = 90)
+  advance[[i]] <- obj$adv
+  retreat[[i]] <- obj$ret
+  daycount[[i]] <- calc(readAll(brick(files[i])) > 90, mean, na.rm = TRUE) * 365
+  
+}
+
+
+#advance <- brick(stack(advance), filename = file.path(dp, "south_advance.grd"))
+#retreat <- brick(stack(retreat), filename = file.path(dp, "south_retreat.grd"))
+#daycount <- brick(stack(daycount), filename = file.path(dp, "south_daycount.grd"))
+  
+advance <- readAll(brick(stack(advance)))
+retreat <- readAll(brick(stack(retreat)))
+daycount <- readAll(brick(stack(daycount)))
+  
+saveRDS(advance, file.path(dp, "ice_90_advance.rds"))
+saveRDS(retreat, file.path(dp, "ice_90_retreat.rds"))
+saveRDS(daycount, file.path(dp, "ice_90_daycount.rds"))
+
+```
 # Exploring ice season
 
 Load the advance and retreat layers and calculate overall mean and variability. 
