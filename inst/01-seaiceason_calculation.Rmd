@@ -89,7 +89,7 @@ calc_ice_season <- function(yfile, threshval = 15) {
   ice <- brick(yfile)
   year_n <- nlayers(ice)
   template <- ice[[1]] * 0
-  icemat <- values(ice)
+  icemat <- raster::values(ice)
   icemat[icemat > 100] <- 0
   
   ## here we need to get the next day for the interpolation . . .
@@ -267,37 +267,40 @@ saveRDS(daycount, file.path(dp, "ice_70_daycount.rds"))
 
 ```
 
-at 90%
+at 95%
 ```{r, echo=TRUE, eval = FALSE}
 
 library(raadtools)
-files <- list.files(file.path("yearfiles"), full.names = TRUE, pattern = "^south.*grd$")
+files <- list.files(file.path(dp, "yearfiles"), full.names = TRUE, pattern = "^south.*grd$")
 
 advance <- vector("list", length(files))
 retreat <- vector("list", length(files))
 daycount <- vector("list", length(files))
 
-for (i in seq_along(files)) {
-  ## obj contains 2 rasters "adv" and "ret"
-  obj <- calc_ice_season(files[i], threshval = 90)
-  advance[[i]] <- obj$adv
-  retreat[[i]] <- obj$ret
-  daycount[[i]] <- calc(readAll(brick(files[i])) > 90, mean, na.rm = TRUE) * 365
-  
+library(future.apply)
+plan(multiprocess)
+dofun <- function(file) {
+  obj <- calc_ice_season(file, threshval = 95)
+  list(adv = obj$adv, ret = obj$ret, count = calc(readAll(brick(file)) > 95, mean, na.rm = TRUE) * 365)
 }
+out <- future_lapply(files, dofun)
 
+# for (i in seq_along(files)) {
+#   ## obj contains 2 rasters "adv" and "ret"
+#   obj <- calc_ice_season(files[i], threshval = 95)
+#   advance[[i]] <- obj$adv
+#   retreat[[i]] <- obj$ret
+#   daycount[[i]] <- calc(readAll(brick(files[i])) > 95, mean, na.rm = TRUE) * 365
+#   print(i)
+# }
 
-#advance <- brick(stack(advance), filename = file.path(dp, "south_advance.grd"))
-#retreat <- brick(stack(retreat), filename = file.path(dp, "south_retreat.grd"))
-#daycount <- brick(stack(daycount), filename = file.path(dp, "south_daycount.grd"))
+advance <- readAll(brick(stack(lapply(out, function(aa) aa$adv))))
+retreat <- readAll(brick(stack(lapply(out, function(aa) aa$ret))))
+daycount <- readAll(brick(stack(lapply(out, function(aa) aa$count))))
   
-advance <- readAll(brick(stack(advance)))
-retreat <- readAll(brick(stack(retreat)))
-daycount <- readAll(brick(stack(daycount)))
-  
-saveRDS(advance, file.path(dp, "ice_90_advance.rds"))
-saveRDS(retreat, file.path(dp, "ice_90_retreat.rds"))
-saveRDS(daycount, file.path(dp, "ice_90_daycount.rds"))
+saveRDS(advance, file.path(dp, "ice_95_advance.rds"))
+saveRDS(retreat, file.path(dp, "ice_95_retreat.rds"))
+saveRDS(daycount, file.path(dp, "ice_95_daycount.rds"))
 
 ```
 # Exploring ice season
