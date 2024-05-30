@@ -20,7 +20,6 @@ Imports:
     sf
 Suggests:
     knitr,
-    rgeos,
     sp,
     rmarkdown
 VignetteBuilder: knitr
