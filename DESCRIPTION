@@ -1,7 +1,7 @@
 Package: aceecostats
 Type: Package
 Title: Ecosystem status and trends
-Version: 0.1.0
+Version: 0.1.0.9001
 Authors@R: c( 
             person("Michael D.","Sumner", role = c("aut", "cre"), email = "michael.sumner@aad.gov.au"), 
             as.person("Jessica Melbourne-Thomas <Jess.Melbourne-Thomas@aad.gov.au> [aut]"),

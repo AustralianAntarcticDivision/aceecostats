@@ -6,7 +6,7 @@ library(aceecostats)
 library(roc)
 library(dplyr)
 ## RUNME
-dp <- "/home/acebulk/data"
+dp <- "/perm_storage/home/acebulk/data"
 db <- dplyr::src_sqlite(file.path(dp, "habitat_assessment.sqlite3"))
 
 
