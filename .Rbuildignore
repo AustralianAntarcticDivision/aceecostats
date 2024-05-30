@@ -9,3 +9,4 @@
 ^inst/old$
 ^inst/aes_regions.html$
 ^docs/.*
+^\.github$
